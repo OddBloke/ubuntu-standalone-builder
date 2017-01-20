@@ -17,7 +17,7 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'cloud-test-framework = ubuntu_standalone_builder:main',
+            'generate_build_config = generate_build_config:main',
         ],
     },
 )
