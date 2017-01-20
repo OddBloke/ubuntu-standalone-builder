@@ -11,7 +11,7 @@ packages:
 runcmd:
 # Setup environment
 - export HOME=/home/ubuntu
-- export BUILD_ID=FIXME
+- export BUILD_ID=output
 
 # Setup build chroot
 - wget http://cloud-images.ubuntu.com/releases/xenial/release/ubuntu-16.04-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz

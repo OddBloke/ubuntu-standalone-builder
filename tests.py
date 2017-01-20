@@ -21,6 +21,11 @@ class TestWriteCloudConfig(object):
         ubuntu_standalone_builder._write_cloud_config(output_file.strpath)
         assert '#cloud-config' == output_file.readlines(cr=False)[0].strip()
 
+    def test_default_build_id_is_output(self, tmpdir):
+        output_file = tmpdir.join('output.yaml')
+        ubuntu_standalone_builder._write_cloud_config(output_file.strpath)
+        assert '- export BUILD_ID=output\n' in output_file.readlines()
+
 
 class TestMain(object):
 
