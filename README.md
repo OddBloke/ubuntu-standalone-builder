@@ -55,6 +55,16 @@ This assumes that you are using [Azure Resource
 Manager](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview),
 and will prompt you for the other arguments required to launch your VM.
 
+### Tracking build progress
+
+When your build instance launches, cloud-init will start performing the
+build in the background.  If you want to see the output from the build
+process, you can tail cloud-init's output:
+
+```
+$ tail -f /var/log/cloud-init-output.log
+```
+
 ### Fetching built images
 
 Once the image build process has completed, you will find the image
