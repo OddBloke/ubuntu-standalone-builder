@@ -12,13 +12,14 @@ runcmd:
 # Setup environment
 - export HOME=/home/ubuntu
 - export BUILD_ID=output
+- export CHROOT_ROOT=/home/ubuntu/build-$BUILD_ID/chroot-autobuild
 
 # Setup build chroot
 - wget http://cloud-images.ubuntu.com/releases/xenial/release/ubuntu-16.04-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz
-- mkdir -p /home/ubuntu/build-$BUILD_ID/chroot-autobuild
-- tar -C /home/ubuntu/build-$BUILD_ID/chroot-autobuild -x -f /tmp/root.tar.xz
-- mkdir /home/ubuntu/build-$BUILD_ID/chroot-autobuild/build
-- rm /home/ubuntu/build-$BUILD_ID/chroot-autobuild/etc/resolv.conf  # We need to write over this symlink
+- mkdir -p $CHROOT_ROOT
+- tar -C $CHROOT_ROOT -x -f /tmp/root.tar.xz
+- mkdir $CHROOT_ROOT/build
+- rm $CHROOT_ROOT/etc/resolv.conf  # We need to write over this symlink
 
 # Pull in build scripts
 - bzr branch lp:launchpad-buildd /home/ubuntu/launchpad-buildd
