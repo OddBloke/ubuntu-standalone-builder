@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+import sys
+
+
 TEMPLATE = """\
 #cloud-config
 packages:
@@ -37,7 +43,10 @@ def _write_cloud_config(output_file):
 
 
 def main():
-    pass
+    if len(sys.argv) != 2:
+        print('{} expects exactly one argument.'.format(sys.argv[0]))
+        sys.exit(1)
+    _write_cloud_config(sys.argv[1])
 
 
 if __name__ == '__main__':
