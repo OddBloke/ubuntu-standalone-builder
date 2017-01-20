@@ -4,10 +4,6 @@ Build Ubuntu images independent of Launchpad's infrastructure
 
 from setuptools import find_packages, setup
 
-dependencies = [
-    'pyyaml',
-]
-
 setup(
     name='ubuntu_standalone_builder',
     version='0.1.0',
@@ -19,7 +15,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=dependencies,
     entry_points={
         'console_scripts': [
             'cloud-test-framework = ubuntu_standalone_builder:main',
