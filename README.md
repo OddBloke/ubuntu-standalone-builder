@@ -65,14 +65,18 @@ process, you can tail cloud-init's output:
 $ tail -f /var/log/cloud-init-output.log
 ```
 
+The final thing that the build process does is to move the built images
+in to `/home/ubuntu/images`; you can tell that the build is complete
+once image files are placed there.
+
 ### Fetching built images
 
 Once the image build process has completed, you will find the image
-build artifacts in `/home/ubuntu/build-output/chroot-autobuild/build`;
-the files will have `livecd.ubuntu-cpc.` as their prefix.
+build artifacts in `/home/ubuntu/images`; the files will have
+`livecd.ubuntu-cpc.` as their prefix.
 
 To fetch, for example, the root squashfs, you can simply use `scp`:
 
 ```
-$ scp ubuntu@<INSTANCE>:build-output/chroot-autobuild/build/livecd.ubuntu-cpc.squashfs .
+$ scp ubuntu@<INSTANCE>:images/livecd.ubuntu-cpc.squashfs .
 ```
