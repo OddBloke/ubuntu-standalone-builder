@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
+import base64
 import sys
 
 
@@ -33,16 +34,33 @@ runcmd:
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* /home/ubuntu/images
 """
 
+WRITE_FILES_TEMPLATE = """\
+write_files:
+- encoding: b64
+  content: {content}
+  path:
+    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/9999-local-modifications.chroot
+  owner: root:root
+  permissions: '0755'
+"""
 
-def _write_cloud_config(output_file):
+
+def _write_cloud_config(output_file, customisation_script=None):
     """
     Write an image building cloud-config file to a given location.
 
     :param output_file:
         The path for the file to write to.
     """
+    output_string = TEMPLATE
+    if customisation_script is not None:
+        with open(customisation_script, 'rb') as f:
+            content = base64.b64encode(f.read()).decode('utf-8')
+        if content:
+            output_string += '\n'
+            output_string += WRITE_FILES_TEMPLATE.format(content=content)
     with open(output_file, 'w') as f:
-        f.write(TEMPLATE)
+        f.write(output_string)
 
 
 def main():
