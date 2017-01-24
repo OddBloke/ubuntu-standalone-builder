@@ -48,7 +48,9 @@ In order to launch a Microsoft Azure instance with the build
 ```
 $ azure vm quick-create \
     --custom-data build-config.yaml \
-    --image-urn canonical:ubuntuserver:16.04-LTS:latest
+    --image-urn canonical:ubuntuserver:16.04-LTS:latest \
+    --admin-username ubuntu \
+    --os-type Linux
 ```
 
 This assumes that you are using [Azure Resource
