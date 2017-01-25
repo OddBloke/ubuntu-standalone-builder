@@ -111,7 +111,8 @@ class TestMain(object):
         assert excinfo.value.code > 0
 
     def test_main_exits_nonzero_with_too_many_cli_arguments(self, mocker):
-        mocker.patch('sys.argv', ['ubuntu-standalone-builder.py', '1', '2'])
+        mocker.patch(
+            'sys.argv', ['ubuntu-standalone-builder.py', '1', '2', '3'])
         with pytest.raises(SystemExit) as excinfo:
             generate_build_config.main()
         assert excinfo.value.code > 0
@@ -124,4 +125,15 @@ class TestMain(object):
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
         assert [mocker.call(output_filename)] == \
+            write_cloud_config_mock.call_args_list
+
+    def test_main_passes_second_argument_as_customisation_script(self, mocker):
+        customisation_script = 'script.sh'
+        mocker.patch('sys.argv', ['ubuntu-standalone-builder.py',
+                                  'output.yaml', customisation_script])
+        write_cloud_config_mock = mocker.patch(
+            'generate_build_config._write_cloud_config')
+        generate_build_config.main()
+        assert [mocker.call(mocker.ANY,
+                            customisation_script=customisation_script)] == \
             write_cloud_config_mock.call_args_list

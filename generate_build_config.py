@@ -64,10 +64,13 @@ def _write_cloud_config(output_file, customisation_script=None):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print('{} expects exactly one argument.'.format(sys.argv[0]))
+    if len(sys.argv) == 2:
+        _write_cloud_config(sys.argv[1])
+    elif len(sys.argv) == 3:
+        _write_cloud_config(sys.argv[1], customisation_script=sys.argv[2])
+    else:
+        print('{} expects one or two arguments.'.format(sys.argv[0]))
         sys.exit(1)
-    _write_cloud_config(sys.argv[1])
 
 
 if __name__ == '__main__':
