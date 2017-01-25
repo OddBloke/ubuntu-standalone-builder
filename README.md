@@ -100,3 +100,30 @@ To fetch, for example, the root squashfs, you can simply use `scp`:
 ```
 $ scp ubuntu@<INSTANCE>:images/livecd.ubuntu-cpc.squashfs .
 ```
+
+## Customising the Built Images
+
+In order to customise the contents of the built images, you can provide
+a second argument to `generate_build_config.py`.  This should be the
+path to a shell script which will be run within the chroot after all
+other image building is complete.
+
+For example, if you wanted RabbitMQ server to be installed in all the
+images that are produced, you could write a shell script that looked
+something like this out to `script.sh`:
+
+```
+#!/bin/sh
+apt-get update -qqy
+apt-get install -qqy rabbitmq-server
+```
+
+And then, when generating your cloud-config, you simply pass this to
+`generate_build_config.py`:
+
+```
+$ ./generate_build_config.py build-config.yaml script.sh
+```
+
+You can then pass `build-config.yaml` in to your instance launch as
+normal, and you'll get your customised images.
