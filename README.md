@@ -32,13 +32,16 @@ perform the build in any way you wish.  It is assumed that the
 following is true of the instance you choose to launch:
 
 * it is running Ubuntu 16.04 (xenial) or later,
-* it will run cloud-init on boot, and
-* it supports passing user-data through to instances.
+* it will run cloud-init on boot,
+* it supports passing user-data through to instances, and
+* it has at least a 20G root disk.
 
-These conditions are met by the Ubuntu images published in all major
-clouds, and on
-[cloud-images.ubuntu.com](http://cloud-images.ubuntu.com).  Below we
-show specific examples of how to launch instances with `cloud-config`.
+The first three conditions are met by the Ubuntu images published in
+all major clouds, and on
+[cloud-images.ubuntu.com](http://cloud-images.ubuntu.com), and the
+fourth can be met when launching an instance.  Below we
+show specific examples of how to launch instances with `cloud-config`
+and an appropriately-sized disk.
 
 #### Microsoft Azure
 
@@ -56,6 +59,10 @@ $ azure vm quick-create \
 This assumes that you are using [Azure Resource
 Manager](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview),
 and will prompt you for the other arguments required to launch your VM.
+
+(The default Ubuntu image on Microsoft Azure has a root disk of 30GB, so
+no additional configuration is required in order to have enough disk
+space for the build.)
 
 ### Tracking build progress
 
