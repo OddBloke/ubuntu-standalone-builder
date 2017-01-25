@@ -1,4 +1,7 @@
 # ubuntu-standalone-builder
+
+[![Travis status](https://travis-ci.org/OddBloke/ubuntu-standalone-builder.svg?branch=master)](https://travis-ci.org/OddBloke/ubuntu-standalone-builder)
+
 Build Ubuntu images independent of Launchpad's infrastructure
 
 ## How To Build Images
