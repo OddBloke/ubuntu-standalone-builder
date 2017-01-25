@@ -59,7 +59,15 @@ $ azure vm quick-create \
     --os-type Linux
 ```
 
-This assumes that you are using [Azure Resource
+You may also want to specify an SSH key that will be placed on the
+instance, so you don't have to type out a password so often.  To do
+this, append the following to your command:
+
+```
+    --ssh-publickey-file <path to SSH public key>
+```
+
+All of the above assumes that you are using [Azure Resource
 Manager](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview),
 and will prompt you for the other arguments required to launch your VM.
 
