@@ -124,16 +124,19 @@ class TestMain(object):
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
-        assert [mocker.call(output_filename)] == \
+        assert [mocker.call(
+            output_filename, customisation_script=None, ppa=None)] == \
             write_cloud_config_mock.call_args_list
 
-    def test_main_passes_second_argument_as_customisation_script(self, mocker):
+    def test_main_passes_customisation_script(self, mocker):
         customisation_script = 'script.sh'
         mocker.patch('sys.argv', ['ubuntu-standalone-builder.py',
-                                  'output.yaml', customisation_script])
+                                  'output.yaml', '--customisation-script',
+                                  customisation_script])
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
         assert [mocker.call(mocker.ANY,
-                            customisation_script=customisation_script)] == \
+                            customisation_script=customisation_script,
+                            ppa=None)] == \
             write_cloud_config_mock.call_args_list

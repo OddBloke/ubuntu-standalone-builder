@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
+import argparse
 import base64
 import sys
 
@@ -45,7 +46,7 @@ write_files:
 """
 
 
-def _write_cloud_config(output_file, customisation_script=None):
+def _write_cloud_config(output_file, customisation_script=None, ppa=None):
     """
     Write an image building cloud-config file to a given location.
 
@@ -56,6 +57,7 @@ def _write_cloud_config(output_file, customisation_script=None):
         chroot hook in the build environment before it starts, allowing
         modifications to the image contents to be made.
     """
+    #TODO: implement using 'ppa'. This was cut out of a branch.
     output_string = TEMPLATE
     if customisation_script is not None:
         with open(customisation_script, 'rb') as f:
@@ -68,13 +70,14 @@ def _write_cloud_config(output_file, customisation_script=None):
 
 
 def main():
-    if len(sys.argv) == 2:
-        _write_cloud_config(sys.argv[1])
-    elif len(sys.argv) == 3:
-        _write_cloud_config(sys.argv[1], customisation_script=sys.argv[2])
-    else:
-        print('{} expects one or two arguments.'.format(sys.argv[0]))
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('output_filename')
+    parser.add_argument('--customisation-script', dest='custom_script')
+    parser.add_argument('--ppa', dest='ppa')
+    args = parser.parse_args()
+
+    _write_cloud_config(args.output_filename, ppa=args.ppa,
+                        customisation_script=args.custom_script)
 
 
 if __name__ == '__main__':
