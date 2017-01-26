@@ -18,8 +18,8 @@ Building images using ubuntu-standalone builder is a three-phase process:
 ### Generating cloud-config
 
 The `generate_build_config.py` tool is used to produce the cloud-config
-that we will pass in to our cloud instance.  Currently, it takes a
-single argument that specifies the output location:
+that we will pass in to our cloud instance.  In the basic case, it
+takes a single argument that specifies the output location:
 
 ```
 $ ./generate_build_config.py build-config.yaml
