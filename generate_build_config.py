@@ -51,6 +51,10 @@ def _write_cloud_config(output_file, customisation_script=None):
 
     :param output_file:
         The path for the file to write to.
+    :param customisation_script:
+        An (optional) path to a customisation script; this will be included as a
+        chroot hook in the build environment before it starts, allowing
+        modifications to the image contents to be made.
     """
     output_string = TEMPLATE
     if customisation_script is not None:
