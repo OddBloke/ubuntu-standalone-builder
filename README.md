@@ -113,7 +113,8 @@ images that are produced, you could write a shell script that looked
 something like this out to `script.sh`:
 
 ```
-#!/bin/sh
+#!/bin/sh -eux
+echo "================= Running customisation script ================="
 apt-get update -qqy
 apt-get install -qqy rabbitmq-server
 ```
