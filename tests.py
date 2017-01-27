@@ -174,7 +174,7 @@ class TestMain(object):
                             ppa=None)] == \
             write_cloud_config_mock.call_args_list
 
-    def test_main_passes_customisation_script(self, mocker):
+    def test_main_passes_binary_customisation_script(self, mocker):
         customisation_script = 'script.sh'
         mocker.patch('sys.argv',
                      ['ubuntu-standalone-builder.py', 'output.yaml',
