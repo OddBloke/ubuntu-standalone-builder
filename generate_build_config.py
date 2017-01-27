@@ -86,11 +86,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('output_filename')
     parser.add_argument('--customisation-script', dest='custom_script')
+    parser.add_argument('--binary-customisation-script',
+                        dest='binary_custom_script')
     parser.add_argument('--ppa', dest='ppa')
     args = parser.parse_args()
 
     _write_cloud_config(args.output_filename, ppa=args.ppa,
-                        customisation_script=args.custom_script)
+                        customisation_script=args.custom_script,
+                        binary_customisation_script=args.binary_custom_script)
 
 
 if __name__ == '__main__':
