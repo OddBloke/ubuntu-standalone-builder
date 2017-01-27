@@ -56,6 +56,10 @@ def _write_cloud_config(output_file, ppa=None, customisation_script=None,
         An (optional) path to a customisation script; this will be included as a
         chroot hook in the build environment before it starts, allowing
         modifications to the image contents to be made.
+    :param binary_customisation_script:
+        An (optional) path to a binary customisation script; this will be
+        included as a binary hook in the build environment before it starts,
+        allowing the built images to be manipulated.
     """
     #TODO: implement using 'ppa'. This was cut out of a branch.
     output_string = TEMPLATE
