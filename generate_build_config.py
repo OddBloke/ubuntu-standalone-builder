@@ -136,7 +136,7 @@ def main():
     parser.add_argument('output_filename')
     parser.add_argument('--binary-customisation-script',
                         dest='binary_custom_script',
-                        help='A path to a script which will be run outside of
+                        help='A path to a script which will be run outside of'
                         'the image chroot, to modify the way the contents are'
                         ' packed in to image files.')
     parser.add_argument('--customisation-script', dest='custom_script',
