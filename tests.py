@@ -164,7 +164,8 @@ class TestWriteCloudConfigWithCustomisationScript(object):
             assert expected_content == base64.b64decode(
                 stanza['content']).decode('utf-8')
 
-    def test_empty_customisation_script_doesnt_produce_write_files_stanza(self):
+    def test_empty_customisation_script_doesnt_produce_write_files_stanza(
+            self):
         for test_config in self.test_config.values():
             test_config['script_file'].remove()
             test_config['script_file'].ensure()

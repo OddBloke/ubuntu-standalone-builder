@@ -3,7 +3,6 @@ from __future__ import print_function
 
 import argparse
 import base64
-import sys
 
 
 TEMPLATE = """\
@@ -34,7 +33,7 @@ runcmd:
 - /home/ubuntu/launchpad-buildd/umount-chroot $BUILD_ID
 - mkdir /home/ubuntu/images
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* /home/ubuntu/images
-"""
+"""  # noqa: E501
 
 WRITE_FILES_STANZA_TEMPLATE = """\
 - encoding: b64
@@ -43,14 +42,15 @@ WRITE_FILES_STANZA_TEMPLATE = """\
     /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/9999-local-modifications.{hook_type}
   owner: root:root
   permissions: '0755'
-"""
+"""  # noqa: E501
 
 PRIVATE_PPA_TEMPLATE = """
 - chroot $CHROOT_ROOT apt-get install -y apt-transport-https
 - "echo 'deb {ppa_url} xenial main' | tee $CHROOT_ROOT/etc/apt/sources.list.d/builder-extra-ppa.list"
 - "chroot $CHROOT_ROOT apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys {key_id}"
 - chroot $CHROOT_ROOT apt-get -y update
-"""
+"""  # noqa: E501
+
 
 def _get_ppa_snippet(ppa, ppa_key=None):
     """
@@ -97,8 +97,8 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
         included as a binary hook in the build environment before it starts,
         allowing the built images to be manipulated.
     :param customisation_script:
-        An (optional) path to a customisation script; this will be included as a
-        chroot hook in the build environment before it starts, allowing
+        An (optional) path to a customisation script; this will be included as
+        a chroot hook in the build environment before it starts, allowing
         modifications to the image contents to be made.
     :param ppa:
         An (optional) URL pointing to either a public (ppa:user/repo) or
