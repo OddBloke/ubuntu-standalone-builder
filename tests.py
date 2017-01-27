@@ -38,6 +38,11 @@ class TestWriteCloudConfig(object):
 
 class TestWriteCloudConfigWithCustomisationScript(object):
 
+    @pytest.fixture(params=('customisation_script',
+                            'binary_customisation_script'))
+    def customisation_script_kwargs(self, request):
+        return {request.param: self.script.strpath}
+
     @pytest.fixture(autouse=True)
     def customisation_script_tmpdir(self, tmpdir):
         self.output_file = tmpdir.join('output.yaml')
@@ -45,59 +50,69 @@ class TestWriteCloudConfigWithCustomisationScript(object):
         self.content = '#!/bin/sh\ntrue'
         self.script.write(self.content)
 
-    def test_single_write_files_stanza_produced_for_customisation_script(self):
+    def test_single_write_files_stanza_produced_for_customisation_script(
+            self, customisation_script_kwargs):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         assert 1 == len(cloud_config['write_files'])
 
-    def test_customisation_script_owned_by_root(self):
+    def test_customisation_script_owned_by_root(
+            self, customisation_script_kwargs):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         assert 'root:root' == cloud_config['write_files'][0]['owner']
 
-    def test_customisation_script_is_executable_by_root(self):
+    def test_customisation_script_is_executable_by_root(
+            self, customisation_script_kwargs):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         assert '7' == cloud_config['write_files'][0]['permissions'][1]
 
-    def test_customisation_script_placed_in_correct_directory(self):
+    def test_customisation_script_placed_in_correct_directory(
+            self, customisation_script_kwargs):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         path = py.path.local(cloud_config['write_files'][0]['path'])
         assert ('/home/ubuntu/build-output/chroot-autobuild'
                 '/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks' ==
                 path.dirname)
 
-    def test_customisation_script_is_a_chroot_hook(self):
+    def test_customisation_script_is_an_appropriate_hook(
+            self, customisation_script_kwargs):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         path = py.path.local(cloud_config['write_files'][0]['path'])
-        assert '.chroot' == path.ext
+        if 'customisation_script' in customisation_script_kwargs:
+            assert '.chroot' == path.ext
+        else:
+            assert '.binary' == path.ext
 
-    def test_customisation_script_marked_as_base64(self):
+    def test_customisation_script_marked_as_base64(
+            self, customisation_script_kwargs):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         assert 'b64' == cloud_config['write_files'][0]['encoding']
 
-    def test_customisation_script_is_included_in_template_as_base64(self):
+    def test_customisation_script_is_included_in_template_as_base64(
+            self, customisation_script_kwargs):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         assert self.content == base64.b64decode(
             cloud_config['write_files'][0]['content']).decode('utf-8')
 
     def test_empty_customisation_script_doesnt_produce_write_files_stanza(
-            self):
+            self, customisation_script_kwargs):
         self.script.remove()
         self.script.ensure()
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, customisation_script=self.script.strpath)
+            self.output_file.strpath, **customisation_script_kwargs)
         cloud_config = yaml.load(self.output_file.open())
         assert 'write_files' not in cloud_config
 

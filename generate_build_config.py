@@ -40,13 +40,14 @@ write_files:
 - encoding: b64
   content: {content}
   path:
-    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/9999-local-modifications.chroot
+    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/9999-local-modifications.{hook_type}
   owner: root:root
   permissions: '0755'
 """
 
 
-def _write_cloud_config(output_file, customisation_script=None, ppa=None):
+def _write_cloud_config(output_file, ppa=None, customisation_script=None,
+                        binary_customisation_script=None):
     """
     Write an image building cloud-config file to a given location.
 
@@ -64,7 +65,15 @@ def _write_cloud_config(output_file, customisation_script=None, ppa=None):
             content = base64.b64encode(f.read()).decode('utf-8')
         if content:
             output_string += '\n'
-            output_string += WRITE_FILES_TEMPLATE.format(content=content)
+            output_string += WRITE_FILES_TEMPLATE.format(
+                content=content, hook_type='chroot')
+    if binary_customisation_script is not None:
+        with open(binary_customisation_script, 'rb') as f:
+            content = base64.b64encode(f.read()).decode('utf-8')
+        if content:
+            output_string += '\n'
+            output_string += WRITE_FILES_TEMPLATE.format(
+                content=content, hook_type='binary')
     with open(output_file, 'w') as f:
         f.write(output_string)
 
