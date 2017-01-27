@@ -7,6 +7,35 @@ import yaml
 import generate_build_config
 
 
+class TestGetPPASnippet(object):
+
+    def test_unknown_url(self):
+        with pytest.raises(ValueError):
+            generate_build_config._get_ppa_snippet('ftp://blah')
+
+    def test_public_ppa(self):
+        result = generate_build_config._get_ppa_snippet('ppa:foo/bar')
+        expected = '- chroot $CHROOT_ROOT add-apt-repository -y -u ppa:foo/bar'
+        assert result == expected
+
+    def test_https_not_private_ppa(self):
+        with pytest.raises(ValueError):
+            generate_build_config._get_ppa_snippet('https://blah')
+
+    def test_private_ppa_no_key(self):
+        with pytest.raises(ValueError):
+            generate_build_config._get_ppa_snippet(
+                'https://private-ppa.example.com')
+
+    def test_private_ppa_with_key(self):
+        result = generate_build_config._get_ppa_snippet(
+            'https://private-ppa.example.com', 'DEADBEEF')
+        assert 'apt-get install -y apt-transport-https' in result
+        assert 'deb https://private-ppa.example.com xenial main' in result
+        assert ('apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 '
+                '--recv-keys DEADBEEF' in result)
+
+
 class TestWriteCloudConfig(object):
 
     def test_writes_to_file(self, tmpdir):
@@ -34,6 +63,18 @@ class TestWriteCloudConfig(object):
         generate_build_config._write_cloud_config(output_file.strpath)
         cloud_config = yaml.load(output_file.open())
         assert 'write_files' not in cloud_config
+
+    def test_no_ppa_included_by_default(self, tmpdir):
+        output_file = tmpdir.join('output.yaml')
+        generate_build_config._write_cloud_config(output_file.strpath)
+        assert 'add-apt-repository' not in output_file.read()
+        assert 'apt-transport-https' not in output_file.read()
+
+    def test_ppa_snippet_included(self, tmpdir):
+        output_file = tmpdir.join('output.yaml')
+        generate_build_config._write_cloud_config(
+            output_file.strpath, ppa='ppa:foo/bar')
+        assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
 
 
 class TestWriteCloudConfigWithCustomisationScript(object):
@@ -117,26 +158,20 @@ class TestMain(object):
             generate_build_config.main()
         assert excinfo.value.code > 0
 
-    def test_main_passes_first_argument_to_write_cloud_config(self, mocker):
+    def test_main_passes_arguments_to_write_cloud_config(self, mocker):
         output_filename = 'output.yaml'
-        mocker.patch('sys.argv', ['ubuntu-standalone-builder.py',
-                                  output_filename])
-        write_cloud_config_mock = mocker.patch(
-            'generate_build_config._write_cloud_config')
-        generate_build_config.main()
-        assert [mocker.call(
-            output_filename, customisation_script=None, ppa=None)] == \
-            write_cloud_config_mock.call_args_list
-
-    def test_main_passes_customisation_script(self, mocker):
         customisation_script = 'script.sh'
+        ppa = 'ppa:foo/bar'
+        ppa_key = 'DEADBEEF'
         mocker.patch('sys.argv', ['ubuntu-standalone-builder.py',
-                                  'output.yaml', '--customisation-script',
-                                  customisation_script])
+                                  output_filename, '--customisation-script',
+                                  customisation_script, '--ppa', ppa,
+                                  '--ppa-key', ppa_key])
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
-        assert [mocker.call(mocker.ANY,
+        assert [mocker.call(output_filename,
                             customisation_script=customisation_script,
-                            ppa=None)] == \
-            write_cloud_config_mock.call_args_list
+                            ppa=ppa,
+                            ppa_key=ppa_key)] == \
+                write_cloud_config_mock.call_args_list
