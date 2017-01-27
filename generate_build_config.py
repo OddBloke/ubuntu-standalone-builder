@@ -47,10 +47,10 @@ write_files:
 """
 
 PRIVATE_PPA_TEMPLATE = """
-- chroot $CHROOT_ROOT apt install apt-transport-https
+- chroot $CHROOT_ROOT apt-get install -y apt-transport-https
 - "echo 'deb {ppa_url} xenial main' | tee $CHROOT_ROOT/etc/apt/sources.list.d/builder-extra-ppa.list"
 - "chroot $CHROOT_ROOT apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys {key_id}"
-- chroot $CHROOT_ROOT apt update
+- chroot $CHROOT_ROOT apt-get -y update
 """
 
 def _get_ppa_snippet(ppa, ppa_key=None):
