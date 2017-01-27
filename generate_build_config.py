@@ -61,6 +61,9 @@ def _get_ppa_snippet(ppa, ppa_key=None):
     :param ppa:
         The PPA URL. This should be either a "ppa:foo/bar" short form or a
         full https:// URL for private PPAs.
+    :param ppa_key:
+        The hexacecimal key ID used to sign the PPA's package. This is only
+        used for private PPAs.
     """
     conf = ""
     if ppa.startswith("https://"):
@@ -94,6 +97,13 @@ def _write_cloud_config(output_file, customisation_script=None, ppa=None,
         An (optional) path to a customisation script; this will be included as a
         chroot hook in the build environment before it starts, allowing
         modifications to the image contents to be made.
+    :param ppa:
+        An (optional) URL pointing to either a public (ppa:user/repo) or
+        private (https://user:pass@private-ppa.launchpad.net/...) PPA.
+    :param ppa_key:
+        The (optional) hexadecimal key ID used to sign the PPA. This is only
+        used if "ppa" points to a private PPA, and is ignored in every other
+        case.
     """
     ppa_snippet = ""
     if ppa is not None:
