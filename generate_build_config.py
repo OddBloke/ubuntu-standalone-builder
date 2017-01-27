@@ -60,20 +60,16 @@ def _write_cloud_config(output_file, ppa=None, customisation_script=None,
     #TODO: implement using 'ppa'. This was cut out of a branch.
     output_string = TEMPLATE
     write_files_stanzas = []
-    if customisation_script is not None:
-        with open(customisation_script, 'rb') as f:
+    for hook_type, script in (('chroot', customisation_script),
+                              ('binary', binary_customisation_script)):
+        if script is None:
+            continue
+        with open(script, 'rb') as f:
             content = base64.b64encode(f.read()).decode('utf-8')
-        if content:
-            write_files_stanzas.append(
-                WRITE_FILES_STANZA_TEMPLATE.format(
-                    content=content, hook_type='chroot'))
-    if binary_customisation_script is not None:
-        with open(binary_customisation_script, 'rb') as f:
-            content = base64.b64encode(f.read()).decode('utf-8')
-        if content:
-            write_files_stanzas.append(
-                WRITE_FILES_STANZA_TEMPLATE.format(
-                    content=content, hook_type='binary'))
+        if not content:
+            continue
+        write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
+            content=content, hook_type=hook_type))
     if write_files_stanzas:
         output_string += '\nwrite_files:\n'
         for stanza in write_files_stanzas:
