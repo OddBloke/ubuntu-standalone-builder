@@ -104,13 +104,14 @@ $ scp ubuntu@<INSTANCE>:images/livecd.ubuntu-cpc.squashfs .
 ## Customising the Built Images
 
 In order to customise the contents of the built images, you can provide
-a second argument to `generate_build_config.py`.  This should be the
-path to a shell script which will be run within the chroot after all
-other image building is complete.
+a parameter to `generate_build_config.py`, `--customisation-script`.
+The argument to this should be the path to a shell script which will be
+run within the image chroot after all other image customisation is
+complete.
 
 For example, if you wanted RabbitMQ server to be installed in all the
 images that are produced, you could write a shell script that looked
-something like this out to `script.sh`:
+something like this out to `customisation.sh`:
 
 ```
 #!/bin/sh -eux
@@ -123,7 +124,9 @@ And then, when generating your cloud-config, you simply pass this to
 `generate_build_config.py`:
 
 ```
-$ ./generate_build_config.py build-config.yaml script.sh
+$ ./generate_build_config.py \
+    build-config.yaml \
+    --customisation-script customisation.sh
 ```
 
 You can then pass `build-config.yaml` in to your instance launch as
