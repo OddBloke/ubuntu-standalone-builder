@@ -36,12 +36,11 @@ runcmd:
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* /home/ubuntu/images
 """
 
-WRITE_FILES_TEMPLATE = """\
-write_files:
+WRITE_FILES_STANZA_TEMPLATE = """\
 - encoding: b64
   content: {content}
   path:
-    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/9999-local-modifications.chroot
+    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/9999-local-modifications.{hook_type}
   owner: root:root
   permissions: '0755'
 """
@@ -86,13 +85,17 @@ def _get_ppa_snippet(ppa, ppa_key=None):
     return conf
 
 
-def _write_cloud_config(output_file, customisation_script=None, ppa=None,
-                        ppa_key=None):
+def _write_cloud_config(output_file, binary_customisation_script=None,
+                        customisation_script=None, ppa=None, ppa_key=None):
     """
     Write an image building cloud-config file to a given location.
 
     :param output_file:
         The path for the file to write to.
+    :param binary_customisation_script:
+        An (optional) path to a binary customisation script; this will be
+        included as a binary hook in the build environment before it starts,
+        allowing the built images to be manipulated.
     :param customisation_script:
         An (optional) path to a customisation script; this will be included as a
         chroot hook in the build environment before it starts, allowing
@@ -109,12 +112,21 @@ def _write_cloud_config(output_file, customisation_script=None, ppa=None,
     if ppa is not None:
         ppa_snippet = _get_ppa_snippet(ppa, ppa_key)
     output_string = TEMPLATE.format(ppa_conf=ppa_snippet)
-    if customisation_script is not None:
-        with open(customisation_script, 'rb') as f:
+    write_files_stanzas = []
+    for hook_type, script in (('chroot', customisation_script),
+                              ('binary', binary_customisation_script)):
+        if script is None:
+            continue
+        with open(script, 'rb') as f:
             content = base64.b64encode(f.read()).decode('utf-8')
-        if content:
-            output_string += '\n'
-            output_string += WRITE_FILES_TEMPLATE.format(content=content)
+        if not content:
+            continue
+        write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
+            content=content, hook_type=hook_type))
+    if write_files_stanzas:
+        output_string += '\nwrite_files:\n'
+        for stanza in write_files_stanzas:
+            output_string += stanza
     with open(output_file, 'w') as f:
         f.write(output_string)
 
@@ -122,7 +134,15 @@ def _write_cloud_config(output_file, customisation_script=None, ppa=None,
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('output_filename')
-    parser.add_argument('--customisation-script', dest='custom_script')
+    parser.add_argument('--binary-customisation-script',
+                        dest='binary_custom_script',
+                        help='A path to a script which will be run outside of'
+                        'the image chroot, to modify the way the contents are'
+                        ' packed in to image files.')
+    parser.add_argument('--customisation-script', dest='custom_script',
+                        help='A path to a script which will be run within'
+                        ' the image chroot, to modify the content within the'
+                        ' images produced.')
     parser.add_argument('--ppa', dest='ppa', help='The URL of a PPA to inject '
                         'in the build chroot. This can be either a '
                         'ppa:<user>/<ppa> short URL or an https:// URL in the '
@@ -132,8 +152,10 @@ def main():
                         'needed for private (https://) PPAs.')
     args = parser.parse_args()
 
-    _write_cloud_config(args.output_filename, ppa=args.ppa,
+    _write_cloud_config(args.output_filename,
                         customisation_script=args.custom_script,
+                        binary_customisation_script=args.binary_custom_script,
+                        ppa=args.ppa,
                         ppa_key=args.ppa_key)
 
 
