@@ -106,7 +106,8 @@ $ scp ubuntu@<INSTANCE>:images/livecd.ubuntu-cpc.squashfs .
 In order to customise the contents of the built images, you can provide
 a parameter to `generate_build_config.py`, `--customisation-script`.
 The argument to this should be the path to a shell script which will be
-run within the chroot after all other image building is complete.
+run within the image chroot after all other image customisation is
+complete.
 
 For example, if you wanted RabbitMQ server to be installed in all the
 images that are produced, you could write a shell script that looked
