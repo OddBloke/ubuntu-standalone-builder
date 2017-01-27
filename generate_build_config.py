@@ -113,8 +113,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('output_filename')
     parser.add_argument('--customisation-script', dest='custom_script')
-    parser.add_argument('--ppa', dest='ppa')
-    parser.add_argument('--ppa-key', dest='ppa_key')
+    parser.add_argument('--ppa', dest='ppa', help='The URL of a PPA to inject '
+                        'in the build chroot. This can be either a '
+                        'ppa:<user>/<ppa> short URL or an https:// URL in the '
+                        'case of private PPAs.')
+    parser.add_argument('--ppa-key', dest='ppa_key', help='The GPG key ID '
+                        'with which the passed PPA was signed. This is only '
+                        'needed for private (https://) PPAs.')
     args = parser.parse_args()
 
     _write_cloud_config(args.output_filename, ppa=args.ppa,
