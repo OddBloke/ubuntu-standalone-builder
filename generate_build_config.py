@@ -135,8 +135,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('output_filename')
     parser.add_argument('--binary-customisation-script',
-                        dest='binary_custom_script')
-    parser.add_argument('--customisation-script', dest='custom_script')
+                        dest='binary_custom_script',
+                        help='A path to a script which will be run outside of
+                        'the image chroot, to modify the way the contents are'
+                        ' packed in to image files.')
+    parser.add_argument('--customisation-script', dest='custom_script',
+                        help='A path to a script which will be run within'
+                        ' the image chroot, to modify the content within the'
+                        ' images produced.')
     parser.add_argument('--ppa', dest='ppa', help='The URL of a PPA to inject '
                         'in the build chroot. This can be either a '
                         'ppa:<user>/<ppa> short URL or an https:// URL in the '
