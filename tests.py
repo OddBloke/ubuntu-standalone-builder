@@ -42,6 +42,8 @@ def customisation_script_combinations():
     return [
         {'customisation_script': customisation_script_content},
         {'binary_customisation_script': binary_customisation_script_content},
+        {'customisation_script': customisation_script_content,
+         'binary_customisation_script': binary_customisation_script_content},
     ]
 
 

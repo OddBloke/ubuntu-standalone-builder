@@ -35,8 +35,7 @@ runcmd:
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* /home/ubuntu/images
 """
 
-WRITE_FILES_TEMPLATE = """\
-write_files:
+WRITE_FILES_STANZA_TEMPLATE = """\
 - encoding: b64
   content: {content}
   path:
@@ -60,20 +59,25 @@ def _write_cloud_config(output_file, ppa=None, customisation_script=None,
     """
     #TODO: implement using 'ppa'. This was cut out of a branch.
     output_string = TEMPLATE
+    write_files_stanzas = []
     if customisation_script is not None:
         with open(customisation_script, 'rb') as f:
             content = base64.b64encode(f.read()).decode('utf-8')
         if content:
-            output_string += '\n'
-            output_string += WRITE_FILES_TEMPLATE.format(
-                content=content, hook_type='chroot')
+            write_files_stanzas.append(
+                WRITE_FILES_STANZA_TEMPLATE.format(
+                    content=content, hook_type='chroot'))
     if binary_customisation_script is not None:
         with open(binary_customisation_script, 'rb') as f:
             content = base64.b64encode(f.read()).decode('utf-8')
         if content:
-            output_string += '\n'
-            output_string += WRITE_FILES_TEMPLATE.format(
-                content=content, hook_type='binary')
+            write_files_stanzas.append(
+                WRITE_FILES_STANZA_TEMPLATE.format(
+                    content=content, hook_type='binary'))
+    if write_files_stanzas:
+        output_string += '\nwrite_files:\n'
+        for stanza in write_files_stanzas:
+            output_string += stanza
     with open(output_file, 'w') as f:
         f.write(output_string)
 
