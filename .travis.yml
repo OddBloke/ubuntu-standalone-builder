@@ -6,5 +6,9 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
-install: pip install tox-travis
-script: tox
+env:
+    - TESTS=py
+    - TESTS=lint
+install: pip install tox
+script:
+    tox -e $TESTS
