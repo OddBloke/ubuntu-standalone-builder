@@ -66,7 +66,7 @@ def _get_ppa_snippet(ppa, ppa_key=None):
         used for private PPAs.
     """
     conf = ""
-    if ppa.startswith("https://"):
+    if ppa.startswith("https://") and 'private-ppa' in ppa:
         # This is likely a private PPA. We need to:
         # 1. Make sure apt-transport-https is installed.
         # 2. Add the URL to sources.list
@@ -82,7 +82,7 @@ def _get_ppa_snippet(ppa, ppa_key=None):
         conf = '- chroot $CHROOT_ROOT add-apt-repository -y -u {}'.format(ppa)
     else:
         raise ValueError('The extra PPA url must be of the "ppa:foo/bar" form,'
-                         ' or be an "https:" URL pointing to a private PPA.')
+                         ' or be an "https://" URL pointing to a private PPA.')
     return conf
 
 

@@ -18,15 +18,20 @@ class TestGetPPASnippet(object):
         expected = '- chroot $CHROOT_ROOT add-apt-repository -y -u ppa:foo/bar'
         assert result == expected
 
-    def test_private_ppa_no_key(self):
+    def test_https_not_private_ppa(self):
         with pytest.raises(ValueError):
             generate_build_config._get_ppa_snippet('https://blah')
 
+    def test_private_ppa_no_key(self):
+        with pytest.raises(ValueError):
+            generate_build_config._get_ppa_snippet(
+                'https://private-ppa.example.com')
+
     def test_private_ppa_with_key(self):
         result = generate_build_config._get_ppa_snippet(
-            'https://blah', 'DEADBEEF')
-        assert 'apt install apt-transport-https' in result
-        assert 'deb https://blah xenial main' in result
+            'https://private-ppa.example.com', 'DEADBEEF')
+        assert 'apt-get install -y apt-transport-https' in result
+        assert 'deb https://private-ppa.example.com xenial main' in result
         assert ('apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 '
                 '--recv-keys DEADBEEF' in result)
 
