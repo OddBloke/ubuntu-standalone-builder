@@ -38,53 +38,58 @@ class TestGetPPASnippet(object):
 
 
 @pytest.fixture
-def default_output_file(tmpdir):
-    output_file = tmpdir.join('output.yaml')
-    generate_build_config._write_cloud_config(output_file.strpath)
-    return output_file
+def write_cloud_config_to_tmpfile(tmpdir):
+    def _write_cloud_config_to_tmpfile(*args, **kwargs):
+        output_file = tmpdir.join('output.yaml')
+        generate_build_config._write_cloud_config(
+            output_file.strpath, *args, **kwargs)
+        return output_file
+    return _write_cloud_config_to_tmpfile
 
 
 class TestWriteCloudConfig(object):
 
-    def test_writes_to_file(self, default_output_file):
-        assert default_output_file.check()
+    def test_writes_to_file(self, write_cloud_config_to_tmpfile):
+        assert write_cloud_config_to_tmpfile().check()
 
-    def test_written_output_is_yaml(self, default_output_file):
-        yaml.load(default_output_file.read())
+    def test_written_output_is_yaml(self, write_cloud_config_to_tmpfile):
+        yaml.load(write_cloud_config_to_tmpfile().read())
 
-    def test_written_output_is_cloud_config(self, default_output_file):
+    def test_written_output_is_cloud_config(
+            self, write_cloud_config_to_tmpfile):
         assert '#cloud-config' \
-            == default_output_file.readlines(cr=False)[0].strip()
+            == write_cloud_config_to_tmpfile().readlines(cr=False)[0].strip()
 
-    def test_default_build_id_is_output(self, default_output_file):
-        assert '- export BUILD_ID=output\n' in default_output_file.readlines()
+    def test_default_build_id_is_output(self, write_cloud_config_to_tmpfile):
+        assert '- export BUILD_ID=output\n' in \
+            write_cloud_config_to_tmpfile().readlines()
 
-    def test_write_files_not_included_by_default(self, default_output_file):
-        cloud_config = yaml.load(default_output_file.open())
+    def test_write_files_not_included_by_default(
+            self, write_cloud_config_to_tmpfile):
+        cloud_config = yaml.load(write_cloud_config_to_tmpfile().open())
         assert 'write_files' not in cloud_config
 
-    def test_no_ppa_included_by_default(self, default_output_file):
-        assert 'add-apt-repository' not in default_output_file.read()
-        assert 'apt-transport-https' not in default_output_file.read()
+    def test_no_ppa_included_by_default(self, write_cloud_config_to_tmpfile):
+        content = write_cloud_config_to_tmpfile().read()
+        assert 'add-apt-repository' not in content
+        assert 'apt-transport-https' not in content
 
     def _get_wget_line(self, output_file):
         wget_lines = [ln for ln in output_file.readlines() if 'wget' in ln]
         assert 1 == len(wget_lines)
         return wget_lines[0]
 
-    def test_daily_image_used(self, default_output_file):
-        wget_line = self._get_wget_line(default_output_file)
+    def test_daily_image_used(self, write_cloud_config_to_tmpfile):
+        wget_line = self._get_wget_line(write_cloud_config_to_tmpfile())
         assert 'xenial-server-cloudimg-amd64-root.tar.xz ' in wget_line
 
-    def test_latest_daily_image_used(self, default_output_file):
-        url = self._get_wget_line(default_output_file).split()[2]
+    def test_latest_daily_image_used(self, write_cloud_config_to_tmpfile):
+        url = self._get_wget_line(write_cloud_config_to_tmpfile()).split()[2]
         path = urlparse(url).path
         assert 'current' == path.split('/')[2]
 
-    def test_ppa_snippet_included(self, tmpdir):
-        output_file = tmpdir.join('output.yaml')
-        generate_build_config._write_cloud_config(
-            output_file.strpath, ppa='ppa:foo/bar')
+    def test_ppa_snippet_included(self, write_cloud_config_to_tmpfile):
+        output_file = write_cloud_config_to_tmpfile(ppa='ppa:foo/bar')
         assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
 
 
