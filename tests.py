@@ -71,21 +71,21 @@ class TestWriteCloudConfig(object):
         assert 'add-apt-repository' not in output_file.read()
         assert 'apt-transport-https' not in output_file.read()
 
+    def _get_wget_line(self, output_file):
+        wget_lines = [ln for ln in output_file.readlines() if 'wget' in ln]
+        assert 1 == len(wget_lines)
+        return wget_lines[0]
+
     def test_daily_image_used(self, tmpdir):
         output_file = tmpdir.join('output.yaml')
         generate_build_config._write_cloud_config(output_file.strpath)
-        wget_lines = [
-            line for line in output_file.readlines() if 'wget' in line]
-        assert 1 == len(wget_lines)
-        assert 'xenial-server-cloudimg-amd64-root.tar.xz ' in wget_lines[0]
+        wget_line = self._get_wget_line(output_file)
+        assert 'xenial-server-cloudimg-amd64-root.tar.xz ' in wget_line
 
     def test_latest_daily_image_used(self, tmpdir):
         output_file = tmpdir.join('output.yaml')
         generate_build_config._write_cloud_config(output_file.strpath)
-        wget_lines = [
-            line for line in output_file.readlines() if 'wget' in line]
-        assert 1 == len(wget_lines)
-        url = wget_lines[0].split()[2]
+        url = self._get_wget_line(output_file).split()[2]
         path = urlparse(url).path
         assert 'current' == path.split('/')[2]
 
