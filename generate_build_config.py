@@ -39,7 +39,7 @@ WRITE_FILES_STANZA_TEMPLATE = """\
 - encoding: b64
   content: {content}
   path:
-    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/9999-local-modifications.{hook_type}
+    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/{sequence}-local-modifications.{hook_type}
   owner: root:root
   permissions: '0755'
 """  # noqa: E501
@@ -50,6 +50,61 @@ PRIVATE_PPA_TEMPLATE = """
 - "chroot $CHROOT_ROOT apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys {key_id}"
 - chroot $CHROOT_ROOT apt-get -y update
 """  # noqa: E501
+
+SETUP_CONTENT = b"""\
+#!/bin/sh -eux
+mv /usr/sbin/grub-probe /usr/sbin/grub-probe.dist
+cat <<"PSUEDO_GRUB_PROBE" > /usr/sbin/grub-probe
+#!/bin/sh
+Usage() {
+   cat <<EOF
+Usage: euca-psuedo-grub-probe
+   this is a wrapper around grub-probe to provide the answers for an ec2 guest
+EOF
+}
+bad_Usage() { Usage 1>&2; fail "$@"; }
+
+short_opts=""
+long_opts="device-map:,target:,device"
+getopt_out=$(getopt --name "${0##*/}" \
+   --options "${short_opts}" --long "${long_opts}" -- "$@") &&
+   eval set -- "${getopt_out}" ||
+   bad_Usage
+
+device_map=""
+target=""
+device=0
+arg=""
+
+while [ $# -ne 0 ]; do
+   cur=${1}; next=${2};
+   case "$cur" in
+      --device-map) device_map=${next}; shift;;
+      --device) device=1;;
+      --target) target=${next}; shift;;
+      --) shift; break;;
+   esac
+   shift;
+done
+arg=${1}
+
+case "${target}:${device}:${arg}" in
+   device:*:/*) echo "/dev/sda1"; exit 0;;
+   fs:*:*) echo "ext2"; exit 0;;
+   partmap:*:*) echo "msdos"; exit 0;;
+   abstraction:*:*) echo ""; exit 0;;
+   drive:*:/dev/sda) echo "(hd0)";;
+   drive:*:/dev/sda*) echo "(hd0,1)";;
+   fs_uuid:*:*) exit 1;;
+esac
+PSUEDO_GRUB_PROBE
+chmod +x /usr/sbin/grub-probe
+"""  # noqa: E501
+
+TEARDOWN_CONTENT = b"""\
+#!/bin/sh -eux
+mv /usr/sbin/grub-probe.dist /usr/sbin/grub-probe
+"""
 
 
 def _get_ppa_snippet(ppa, ppa_key=None):
@@ -121,8 +176,16 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
             content = base64.b64encode(f.read()).decode('utf-8')
         if not content:
             continue
+        if hook_type == 'chroot':
+            setup_content = base64.b64encode(SETUP_CONTENT).decode('utf-8')
+            teardown_content = base64.b64encode(
+                TEARDOWN_CONTENT).decode('utf-8')
+            write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
+                content=setup_content, hook_type=hook_type, sequence=9997))
+            write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
+                content=teardown_content, hook_type=hook_type, sequence=9999))
         write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
-            content=content, hook_type=hook_type))
+            content=content, hook_type=hook_type, sequence=9998))
     if write_files_stanzas:
         output_string += '\nwrite_files:\n'
         for stanza in write_files_stanzas:
