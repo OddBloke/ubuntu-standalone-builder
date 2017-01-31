@@ -71,16 +71,9 @@ class TestWriteCloudConfig(object):
         assert 'add-apt-repository' not in output_file.read()
         assert 'apt-transport-https' not in output_file.read()
 
-    def test_ppa_snippet_included(self, tmpdir):
-        output_file = tmpdir.join('output.yaml')
-        generate_build_config._write_cloud_config(
-            output_file.strpath, ppa='ppa:foo/bar')
-        assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
-
     def test_daily_image_used(self, tmpdir):
         output_file = tmpdir.join('output.yaml')
-        generate_build_config._write_cloud_config(
-            output_file.strpath, ppa='ppa:foo/bar')
+        generate_build_config._write_cloud_config(output_file.strpath)
         wget_lines = [
             line for line in output_file.readlines() if 'wget' in line]
         assert 1 == len(wget_lines)
@@ -88,14 +81,19 @@ class TestWriteCloudConfig(object):
 
     def test_latest_daily_image_used(self, tmpdir):
         output_file = tmpdir.join('output.yaml')
-        generate_build_config._write_cloud_config(
-            output_file.strpath, ppa='ppa:foo/bar')
+        generate_build_config._write_cloud_config(output_file.strpath)
         wget_lines = [
             line for line in output_file.readlines() if 'wget' in line]
         assert 1 == len(wget_lines)
         url = wget_lines[0].split()[2]
         path = urlparse(url).path
         assert 'current' == path.split('/')[2]
+
+    def test_ppa_snippet_included(self, tmpdir):
+        output_file = tmpdir.join('output.yaml')
+        generate_build_config._write_cloud_config(
+            output_file.strpath, ppa='ppa:foo/bar')
+        assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
 
 
 def customisation_script_combinations():
