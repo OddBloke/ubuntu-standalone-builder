@@ -77,17 +77,16 @@ class TestWriteCloudConfig(object):
             output_file.strpath, ppa='ppa:foo/bar')
         assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
 
-    def test_release_image_used(self, tmpdir):
+    def test_daily_image_used(self, tmpdir):
         output_file = tmpdir.join('output.yaml')
         generate_build_config._write_cloud_config(
             output_file.strpath, ppa='ppa:foo/bar')
         wget_lines = [
             line for line in output_file.readlines() if 'wget' in line]
         assert 1 == len(wget_lines)
-        assert (
-            'ubuntu-16.04-server-cloudimg-amd64-root.tar.xz ' in wget_lines[0])
+        assert 'xenial-server-cloudimg-amd64-root.tar.xz ' in wget_lines[0]
 
-    def test_latest_release_image_used(self, tmpdir):
+    def test_latest_daily_image_used(self, tmpdir):
         output_file = tmpdir.join('output.yaml')
         generate_build_config._write_cloud_config(
             output_file.strpath, ppa='ppa:foo/bar')
@@ -96,7 +95,7 @@ class TestWriteCloudConfig(object):
         assert 1 == len(wget_lines)
         url = wget_lines[0].split()[2]
         path = urlparse(url).path
-        assert 'release' == path.split('/')[3]
+        assert 'current' == path.split('/')[2]
 
 
 def customisation_script_combinations():
