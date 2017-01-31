@@ -16,7 +16,7 @@ runcmd:
 - export CHROOT_ROOT=/home/ubuntu/build-$BUILD_ID/chroot-autobuild
 
 # Setup build chroot
-- wget http://cloud-images.ubuntu.com/releases/xenial/release/ubuntu-16.04-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz
+- wget http://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz
 - mkdir -p $CHROOT_ROOT
 - tar -C $CHROOT_ROOT -x -f /tmp/root.tar.xz
 - mkdir $CHROOT_ROOT/build

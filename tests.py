@@ -3,6 +3,7 @@ import base64
 import py
 import pytest
 import yaml
+from six.moves.urllib.parse import urlparse
 
 import generate_build_config
 
@@ -69,6 +70,24 @@ class TestWriteCloudConfig(object):
         generate_build_config._write_cloud_config(output_file.strpath)
         assert 'add-apt-repository' not in output_file.read()
         assert 'apt-transport-https' not in output_file.read()
+
+    def _get_wget_line(self, output_file):
+        wget_lines = [ln for ln in output_file.readlines() if 'wget' in ln]
+        assert 1 == len(wget_lines)
+        return wget_lines[0]
+
+    def test_daily_image_used(self, tmpdir):
+        output_file = tmpdir.join('output.yaml')
+        generate_build_config._write_cloud_config(output_file.strpath)
+        wget_line = self._get_wget_line(output_file)
+        assert 'xenial-server-cloudimg-amd64-root.tar.xz ' in wget_line
+
+    def test_latest_daily_image_used(self, tmpdir):
+        output_file = tmpdir.join('output.yaml')
+        generate_build_config._write_cloud_config(output_file.strpath)
+        url = self._get_wget_line(output_file).split()[2]
+        path = urlparse(url).path
+        assert 'current' == path.split('/')[2]
 
     def test_ppa_snippet_included(self, tmpdir):
         output_file = tmpdir.join('output.yaml')
