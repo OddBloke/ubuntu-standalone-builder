@@ -9,6 +9,7 @@ python:
 env:
     - TESTS=py
     - TESTS=lint
+    - TESTS=smoke_test
 install: pip install tox
 script:
     tox -e $TESTS
