@@ -27,7 +27,8 @@ matrix:
               - az login --service-principal --tenant $AZURE_TENANT --username $AZURE_USERNAME --password $AZURE_PASSWORD
               - RESOURCE_GROUP=ubuntu-standalone-builder
               - VM_NAME=usb-$(date +%s)
-              - az vm create --resource-group $RESOURCE_GROUP --image Canonical:UbuntuServer:16.04-LTS:latest --name $VM_NAME --generate-ssh-keys
+              - ssh-keygen -f $HOME/.ssh/id_rsa -N ""
+              - az vm create --resource-group $RESOURCE_GROUP --image Canonical:UbuntuServer:16.04-LTS:latest --name $VM_NAME --ssh-key-value $HOME/.ssh/id_rsa.pub
               - IP_ADDRESS=$(az vm show --resource-group $RESOURCE_GROUP --name $VM_NAME --show-details --query 'publicIps' --output tsv)
-              - ssh -i $HOME/.ssh/id_rsa -o "StrictHostKeyChecking=no" ubuntu@$IP_ADDRESS ip addr
+              - ssh -o "StrictHostKeyChecking=no" ubuntu@$IP_ADDRESS ip addr
               - az vm delete --force --resource-group $RESOURCE_GROUP --name $VM_NAME
