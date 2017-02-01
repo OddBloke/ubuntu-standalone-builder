@@ -27,7 +27,7 @@ matrix:
               - az login --service-principal --tenant $AZURE_TENANT --username $AZURE_USERNAME --password $AZURE_PASSWORD
               - RESOURCE_GROUP=ubuntu-standalone-builder
               - VM_NAME=usb-$(date +%s)
-              - ssh-keygen -f $HOME/.ssh/id_rsa -N ""
+              - ssh-keygen -f $HOME/.ssh/id_rsa -N "" -C "ubuntu-standalone-builder"
               - az vm create --resource-group $RESOURCE_GROUP --image Canonical:UbuntuServer:16.04-LTS:latest --name $VM_NAME --ssh-key-value $HOME/.ssh/id_rsa.pub
               - IP_ADDRESS=$(az vm show --resource-group $RESOURCE_GROUP --name $VM_NAME --show-details --query 'publicIps' --output tsv)
               - ssh -o "StrictHostKeyChecking=no" ubuntu@$IP_ADDRESS ip addr
