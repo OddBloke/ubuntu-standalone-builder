@@ -54,7 +54,7 @@ PRIVATE_PPA_TEMPLATE = """
 SETUP_CONTENT = b"""\
 #!/bin/sh -eux
 mv /usr/sbin/grub-probe /usr/sbin/grub-probe.dist
-cat <<"PSUEDO_GRUB_PROBE" > /usr/sbin/grub-probe
+cat <<"PSEUDO_GRUB_PROBE" > /usr/sbin/grub-probe
 #!/bin/sh
 bad_Usage() { echo "$@"; exit 1; }
 
@@ -91,7 +91,7 @@ case "${target}:${device}:${arg}" in
    drive:*:/dev/sda*) echo "(hd0,1)";;
    fs_uuid:*:*) exit 1;;
 esac
-PSUEDO_GRUB_PROBE
+PSEUDO_GRUB_PROBE
 chmod +x /usr/sbin/grub-probe
 """  # noqa: E501
 
