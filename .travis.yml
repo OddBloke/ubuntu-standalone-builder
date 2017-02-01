@@ -22,7 +22,7 @@ matrix:
               - secure: "ijRvfjhhMOBxnm2ZzxTfE/noVUj1z0sKXQxn0wbKnbQ8RJzK6JhoTnCG2fEnRwKNYU+yBXGhkqrIaEjI/367Cu5kw67ad6qaL6mSQQ+xyMopkHDPkSJ4SyjJyChJS6jlUqo5lwzJCB/F4f0X+TcmVbenuPnNk3PcNvvZJSgD7FVCsCRrCY5peSk1mY3b1mfWNoJ5bLAG0PpxyxGJTToUvFTe7QvFs/JreokcUfuypSW+dW/QL3ZWvujrJ2dVteBxLdFzo5XXCs4/0uYU7TnAMPTY0eqhznQF1jooOBROQcGyDv1XNO29ZhW8fnyHVz9ST+CirMfTsmdAuXGmPMfS0QOLab1yNeYI6+qJ8yPTDBEwdWTo/niW1eKu3yD0bWckElOt+Hoc+ATzgUQrkfHODqvb77Jn7m3EWDcC5FXw4JreRyb3i/H1dQ5qv8HuQvh1Ys/+WpX7x/FZzqOoZyWC4wLIQxQuWyuNPXM8z2RwII8Ex6P2FAQ4soB4IU7VQ/5XcuY2rqq1caFHGLsKfOwjCNK9KUxbe96c0XydayBsSUgZoXZG14w1aKyfxbzg855Fs7ufVRvFkRgiSfvn+XtZx34VcQQoBKcasrbzKccVkKjLMTEK74oPGFtik3Patjuw9HgEVY4nxm80EueeLBITNgMAN6mzc03gsLh3l0cswvA=" # AZURE_PASSWORD
               - secure: "wHcckrvW7ZrIhQPM+8EG/oTx/HskDFA/Q5PG4QEL0ST5NXfAevO+OXGl1BtqypkGeXY2JI8c/D5YOcDe6rirqS9WEieJzt3WCX49YEOhCjk8XMMpWsy0wMYUAUqw8yL+F1I5FvXVWxEfqqWzT1UGOVZLFPBY1Mi2QRC5FVvg+Ygn+itk3CuRWJFsfNBarmb/uWCoB7A+WiFSJxcDny6FVaRQEtoNi4xcqZJbe7VlxX+NE6k8+nbI38E1lbpGo7HY06Y0qFelca1gUXn7/Pr36hmi5yXoBGcju/vNkq2I2LaxQv9h47llR5xVI1EN8bsc3wRWnZVBqUkVbMe1YdnSJD7iVttZGl9kWqVCHc0P7hktRvfQ+Nq7QMV9+3DwcGaEx8eXj5gDsY/kh35VQ3RtiPE9tVZqbCFJgL+oagtPVBbBQZ0F1EQEd0GoY1FDKjuKZBlJiq3x6DW3NjJm5ILBngHiY2v42CumtaEKhXGT9Jg9DZtAtExrlnJDl8Z8TGtidyVToLOqsFzg/iZRMJeZTmAXx2vO2V8/pO/VeXKTPcBaRq8HLssHrItVxwvPY530JuwI/uJDZ6uS/2ls62PV19wRYSosR/GHtO4rytdZRyG+JjHurYj6Nzo+MwAY79c4gFbDS2J/hX8zKXv+NSAUl1uCAstVIHlAUbQPk7VyP80="  # AZURE_TENANT
           install:
-              pip install azure-cli
+              pip install --use-wheel azure-cli
           script:
               - az login --service-principal --tenant $AZURE_TENANT --username $AZURE_USERNAME --password $AZURE_PASSWORD
               - RESOURCE_GROUP=ubuntu-standalone-builder
