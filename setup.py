@@ -2,7 +2,7 @@
 Build Ubuntu images independent of Launchpad's infrastructure
 """
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 setup(
     name='ubuntu_standalone_builder',
@@ -11,7 +11,7 @@ setup(
     author_email='daniel.watkins@canonical.com',
     description='Build Ubuntu images without Launchpad',
     long_description=__doc__,
-    packages=find_packages(exclude=['tests']),
+    py_modules=['generate_build_config'],
     include_package_data=True,
     zip_safe=False,
     platforms='any',
