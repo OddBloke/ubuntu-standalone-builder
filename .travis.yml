@@ -25,4 +25,8 @@ matrix:
               pip install azure-cli
           script:
               - az login --service-principal --tenant $AZURE_TENANT --username $AZURE_USERNAME --password $AZURE_PASSWORD
-              - az vm list
+              - RESOURCE_GROUP=ubuntu-standalone-builder
+              - VM_NAME=usb-$(date +%s)
+              - az vm create --resource-group $RESOURCE_GROUP --image Canonical:UbuntuServer:16.04-LTS:latest --name $VM_NAME --generate-ssh-keys
+              - IP_ADDRESS=$(az vm show --resource-group $RESOURCE_GROUP --name $VM_NAME --show-details --query 'publicIps')
+              - ssh ubuntu@$IP_ADDRESS ip addr
