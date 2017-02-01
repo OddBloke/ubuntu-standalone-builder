@@ -30,3 +30,4 @@ matrix:
               - az vm create --resource-group $RESOURCE_GROUP --image Canonical:UbuntuServer:16.04-LTS:latest --name $VM_NAME --generate-ssh-keys
               - IP_ADDRESS=$(az vm show --resource-group $RESOURCE_GROUP --name $VM_NAME --show-details --query 'publicIps')
               - ssh ubuntu@$IP_ADDRESS ip addr
+              - az vm delete --force --resource-group $RESOURCE_GROUP --name $VM_NAME
