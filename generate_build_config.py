@@ -56,13 +56,7 @@ SETUP_CONTENT = b"""\
 mv /usr/sbin/grub-probe /usr/sbin/grub-probe.dist
 cat <<"PSUEDO_GRUB_PROBE" > /usr/sbin/grub-probe
 #!/bin/sh
-Usage() {
-   cat <<EOF
-Usage: euca-psuedo-grub-probe
-   this is a wrapper around grub-probe to provide the answers for an ec2 guest
-EOF
-}
-bad_Usage() { Usage 1>&2; fail "$@"; }
+bad_Usage() { echo "$@"; exit 1; }
 
 short_opts=""
 long_opts="device-map:,target:,device"
