@@ -13,3 +13,10 @@ env:
 install: pip install tox
 script:
     tox -e $TESTS
+matrix:
+    include:
+        - python: 3.5
+          env:
+              TESTS=integration
+          script:
+              exit 1
