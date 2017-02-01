@@ -17,6 +17,8 @@ matrix:
     include:
         - python: 3.5
           env:
-              TESTS=integration
+              - TESTS=integration
+          install:
+              pip install azure-cli
           script:
               exit 1
