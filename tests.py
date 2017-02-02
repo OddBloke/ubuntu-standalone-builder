@@ -92,6 +92,18 @@ class TestWriteCloudConfig(object):
         output_file = write_cloud_config_to_tmpfile(ppa='ppa:foo/bar')
         assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
 
+    def test_binary_hook_filter_included(self, write_cloud_config_to_tmpfile):
+        hook_filter = 'some*glob*'
+        output_file = write_cloud_config_to_tmpfile(
+            binary_hook_filter=hook_filter)
+        cloud_config = yaml.load(output_file.open())
+        for stanza in cloud_config['write_files']:
+            content = base64.b64decode(stanza['content']).decode('utf-8')
+            if '{}|9997*|9998*|9999*'.format(hook_filter) in content:
+                break
+        else:
+            pytest.fail('Binary hook filter not correctly included.')
+
 
 def customisation_script_combinations():
     customisation_script_content = '#!/bin/sh\n-- chroot --'

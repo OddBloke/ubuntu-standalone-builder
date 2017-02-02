@@ -51,6 +51,23 @@ PRIVATE_PPA_TEMPLATE = """
 - chroot $CHROOT_ROOT apt-get -y update
 """  # noqa: E501
 
+BINARY_HOOK_FILTER_CONTENT = """\
+#!/bin/sh -eux
+for hook in /build/config/hooks/*.binary; do
+    case $(basename $hook) in
+        {}|9997*|9998*|9999*)
+            ;;
+        *)
+            cat << EOF > $hook
+#!/bin/sh
+echo "Skipped \$0"
+exit 0
+EOF
+            ;;
+    esac
+done
+"""
+
 SETUP_CONTENT = """\
 #!/bin/sh -eux
 mv /usr/sbin/grub-probe /usr/sbin/grub-probe.dist
@@ -141,7 +158,8 @@ def _produce_write_files_stanza(content, hook_type, sequence):
 
 
 def _write_cloud_config(output_file, binary_customisation_script=None,
-                        customisation_script=None, ppa=None, ppa_key=None):
+                        binary_hook_filter=None, customisation_script=None,
+                        ppa=None, ppa_key=None):
     """
     Write an image building cloud-config file to a given location.
 
@@ -151,6 +169,11 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
         An (optional) path to a binary customisation script; this will be
         included as a binary hook in the build environment before it starts,
         allowing the built images to be manipulated.
+    :param binary_hook_filter:
+        An optional string that defines which binary hooks within the build
+        chroot should be preserved.  This is templated in to a shell script, so
+        globs valid in that context are valid here.  If not passed (and by
+        default), all binary hooks are preserved.
     :param customisation_script:
         An (optional) path to a customisation script; this will be included as
         a chroot hook in the build environment before it starts, allowing
@@ -183,6 +206,11 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
                 content=TEARDOWN_CONTENT, hook_type=hook_type, sequence=9999))
         write_files_stanzas.append(_produce_write_files_stanza(
             content=content, hook_type=hook_type, sequence=9998))
+    if binary_hook_filter is not None:
+        write_files_stanzas.append(_produce_write_files_stanza(
+            content=BINARY_HOOK_FILTER_CONTENT.format(binary_hook_filter),
+            hook_type='binary',
+            sequence=0))
     if write_files_stanzas:
         output_string += '\nwrite_files:\n'
         for stanza in write_files_stanzas:
