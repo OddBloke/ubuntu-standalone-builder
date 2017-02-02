@@ -294,6 +294,7 @@ class TestMain(object):
     def test_main_passes_arguments_to_write_cloud_config(self, mocker):
         output_filename = 'output.yaml'
         binary_customisation_script = 'binary.sh'
+        binary_hook_filter = 'binary*hook*'
         customisation_script = 'script.sh'
         ppa = 'ppa:foo/bar'
         ppa_key = 'DEADBEEF'
@@ -301,6 +302,8 @@ class TestMain(object):
                                   output_filename,
                                   '--binary-customisation-script',
                                   binary_customisation_script,
+                                  '--binary-hook-filter',
+                                  binary_hook_filter,
                                   '--customisation-script',
                                   customisation_script, '--ppa', ppa,
                                   '--ppa-key', ppa_key])
@@ -310,6 +313,7 @@ class TestMain(object):
         assert [mocker.call(
             output_filename,
             binary_customisation_script=binary_customisation_script,
+            binary_hook_filter=binary_hook_filter,
             customisation_script=customisation_script,
             ppa=ppa,
             ppa_key=ppa_key)] == write_cloud_config_mock.call_args_list

@@ -227,6 +227,11 @@ def main():
                         help='A path to a script which will be run outside of'
                         'the image chroot, to modify the way the contents are'
                         ' packed in to image files.')
+    parser.add_argument('--binary-hook-filter',
+                        dest='binary_hook_filter',
+                        help='A glob which will be used to remove binary'
+                        ' hooks from within the build chroot.  If not'
+                        ' specified, no binary hooks will be removed.')
     parser.add_argument('--customisation-script', dest='custom_script',
                         help='A path to a script which will be run within'
                         ' the image chroot, to modify the content within the'
@@ -243,6 +248,7 @@ def main():
     _write_cloud_config(args.output_filename,
                         customisation_script=args.custom_script,
                         binary_customisation_script=args.binary_custom_script,
+                        binary_hook_filter=args.binary_hook_filter,
                         ppa=args.ppa,
                         ppa_key=args.ppa_key)
 
