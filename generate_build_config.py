@@ -51,7 +51,7 @@ PRIVATE_PPA_TEMPLATE = """
 - chroot $CHROOT_ROOT apt-get -y update
 """  # noqa: E501
 
-SETUP_CONTENT = b"""\
+SETUP_CONTENT = """\
 #!/bin/sh -eux
 mv /usr/sbin/grub-probe /usr/sbin/grub-probe.dist
 cat <<"PSEUDO_GRUB_PROBE" > /usr/sbin/grub-probe
@@ -95,7 +95,7 @@ PSEUDO_GRUB_PROBE
 chmod +x /usr/sbin/grub-probe
 """  # noqa: E501
 
-TEARDOWN_CONTENT = b"""\
+TEARDOWN_CONTENT = """\
 #!/bin/sh -eux
 mv /usr/sbin/grub-probe.dist /usr/sbin/grub-probe
 """
@@ -134,6 +134,12 @@ def _get_ppa_snippet(ppa, ppa_key=None):
     return conf
 
 
+def _produce_write_files_stanza(content, hook_type, sequence):
+    b64_content = base64.b64encode(content.encode('utf-8')).decode('utf-8')
+    return WRITE_FILES_STANZA_TEMPLATE.format(
+        content=b64_content, hook_type=hook_type, sequence=sequence)
+
+
 def _write_cloud_config(output_file, binary_customisation_script=None,
                         customisation_script=None, ppa=None, ppa_key=None):
     """
@@ -167,18 +173,15 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
         if script is None:
             continue
         with open(script, 'rb') as f:
-            content = base64.b64encode(f.read()).decode('utf-8')
+            content = f.read().decode('utf-8')
         if not content:
             continue
         if hook_type == 'chroot':
-            setup_content = base64.b64encode(SETUP_CONTENT).decode('utf-8')
-            teardown_content = base64.b64encode(
-                TEARDOWN_CONTENT).decode('utf-8')
-            write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
-                content=setup_content, hook_type=hook_type, sequence=9997))
-            write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
-                content=teardown_content, hook_type=hook_type, sequence=9999))
-        write_files_stanzas.append(WRITE_FILES_STANZA_TEMPLATE.format(
+            write_files_stanzas.append(_produce_write_files_stanza(
+                content=SETUP_CONTENT, hook_type=hook_type, sequence=9997))
+            write_files_stanzas.append(_produce_write_files_stanza(
+                content=TEARDOWN_CONTENT, hook_type=hook_type, sequence=9999))
+        write_files_stanzas.append(_produce_write_files_stanza(
             content=content, hook_type=hook_type, sequence=9998))
     if write_files_stanzas:
         output_string += '\nwrite_files:\n'

@@ -117,10 +117,10 @@ class TestWriteCloudConfigWithCustomisationScript(object):
             self.kwargs[script] = script_file.strpath
             self.test_config[script] = {'script_file': script_file,
                                         'content': request.param[script]}
-        self.setup_content = b'#!/bin/sh\n-- setup --'
+        self.setup_content = '#!/bin/sh\n-- setup --'
         monkeypatch.setattr(
             generate_build_config, "SETUP_CONTENT", self.setup_content)
-        self.teardown_content = b'#!/bin/sh\n-- teardown --'
+        self.teardown_content = '#!/bin/sh\n-- teardown --'
         monkeypatch.setattr(
             generate_build_config, "TEARDOWN_CONTENT", self.teardown_content)
 
@@ -228,18 +228,19 @@ class TestWriteCloudConfigWithCustomisationScript(object):
     def test_setup_teardown_content_matches_template(self, hook, monkeypatch):
         if list(self.kwargs.keys()) == ['binary_customisation_script']:
             pytest.skip('Test only applies to chroot hooks.')
-        expected_content = b'#!/bin/sh\n-- specific test content --'
+        expected_string = '#!/bin/sh\n-- specific test content --'
         monkeypatch.setattr(
             generate_build_config,
-            "{}_CONTENT".format(hook.upper()), expected_content)
+            "{}_CONTENT".format(hook.upper()), expected_string)
         generate_build_config._write_cloud_config(
             self.output_file.strpath, **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         contents = [base64.b64decode(stanza['content'])
                     for stanza in cloud_config['write_files']]
-        assert expected_content in contents
+        expected_bytes = expected_string.encode('utf-8')
+        assert expected_bytes in contents
         assert 1 == len(
-            [content for content in contents if expected_content == content])
+            [content for content in contents if expected_bytes == content])
 
 
 class TestMain(object):
