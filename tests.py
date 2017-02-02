@@ -104,6 +104,27 @@ class TestWriteCloudConfig(object):
         else:
             pytest.fail('Binary hook filter not correctly included.')
 
+    def test_binary_hook_sequence_is_lower_than_030(
+            self, write_cloud_config_to_tmpfile, monkeypatch):
+        # That's the lowest sequence of disks and we want to filter before that
+        filter_template = '-- binary hook filter:{} --'
+        hook_filter = 'some*glob'
+        monkeypatch.setattr(
+            generate_build_config,
+            "BINARY_HOOK_FILTER_CONTENT", filter_template)
+        output_file = write_cloud_config_to_tmpfile(
+            binary_hook_filter=hook_filter)
+        cloud_config = yaml.load(output_file.open())
+        expected_content = filter_template.format(hook_filter)
+        for stanza in cloud_config['write_files']:
+            content = base64.b64decode(stanza['content']).decode('utf-8')
+            if content == expected_content:
+                break
+        else:
+            pytest.fail('Binary hook filter not correctly included.')
+        path = stanza['path'].rsplit('/')[-1]
+        assert path < '030-some-file.binary'
+
 
 def customisation_script_combinations():
     customisation_script_content = '#!/bin/sh\n-- chroot --'
