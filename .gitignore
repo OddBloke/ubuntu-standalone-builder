@@ -89,3 +89,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Snap build artifacts
+ubuntu-standalone-builder_*_all.snap
+ubuntu-standalone-builder_*_source.tar.bz2
+prime
+stage
