@@ -1,0 +1,21 @@
+name: ubuntu-standalone-builder
+version: 0.1.0
+architectures: [ all ]
+summary: Build Ubuntu images in a VM
+description: |
+    Provides tools that make building Ubuntu images without Launchpad
+    infrastructure much easier.
+
+grade: devel
+confinement: strict
+
+apps:
+    generate-build-config:
+        command: bin/generate_build_config
+        plugs:
+            - home
+
+parts:
+    ubuntu-standalone-builder:
+        plugin: python
+        source: .
