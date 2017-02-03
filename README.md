@@ -25,8 +25,9 @@ outputs cloud-config that will perform a basic build:
 $ ./generate_build_config.py > build-config.yaml
 ```
 
-The cloud-config it produces will build the artifacts that are found on
-[cloud-images.ubuntu.com](http://cloud-images.ubuntu.com) for xenial.
+The cloud-config it produces will build most of the artifacts that are
+found on [cloud-images.ubuntu.com](http://cloud-images.ubuntu.com) for
+xenial.
 
 ### Launching a build instance
 
