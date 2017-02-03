@@ -11,7 +11,7 @@ import generate_build_config
 
 @pytest.fixture(scope='session')
 def build_id():
-    return 'output'
+    return 'root'
 
 
 class TestGetPPASnippet(object):
@@ -66,7 +66,7 @@ class TestWriteCloudConfig(object):
         assert '#cloud-config' \
             == write_cloud_config_in_memory().splitlines()[0].strip()
 
-    def test_default_build_id_is_output(
+    def test_default_build_id_is_root(
             self, build_id, write_cloud_config_in_memory):
         assert '- export BUILD_ID={}'.format(build_id) in \
             write_cloud_config_in_memory().splitlines()
