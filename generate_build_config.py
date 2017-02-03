@@ -28,8 +28,8 @@ runcmd:
 
 # Perform the build
 - /home/ubuntu/launchpad-buildd/mount-chroot $BUILD_ID
-- /home/ubuntu/launchpad-buildd/update-debian-chroot $BUILD_ID
 {ppa_conf}
+- /home/ubuntu/launchpad-buildd/update-debian-chroot $BUILD_ID
 - /home/ubuntu/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID
 - /home/ubuntu/launchpad-buildd/umount-chroot $BUILD_ID
 - mkdir /home/ubuntu/images

@@ -93,6 +93,13 @@ class TestWriteCloudConfig(object):
         output = write_cloud_config_in_memory(ppa='ppa:foo/bar')
         assert 'add-apt-repository -y -u ppa:foo/bar' in output
 
+    def test_ppa_snippet_included_before_update_debian_chroot(
+            self, write_cloud_config_in_memory):
+        ppa_string = 'ppa:foo/bar'
+        output = write_cloud_config_in_memory(ppa=ppa_string)
+        assert output.find('add-apt-repository -y -u {}'.format(ppa_string)) \
+            < output.find('update-debian-chroot')
+
     def test_binary_hook_filter_included(self, write_cloud_config_in_memory):
         hook_filter = 'some*glob*'
         output = write_cloud_config_in_memory(binary_hook_filter=hook_filter)
