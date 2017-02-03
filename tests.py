@@ -277,15 +277,17 @@ class TestWriteCloudConfigWithCustomisationScript(object):
 
 class TestMain(object):
 
-    def test_main_exits_nonzero_with_too_many_cli_arguments(self, mocker):
+    def test_main_exits_nonzero_with_too_many_cli_arguments(
+            self, mocker, tmpdir):
         mocker.patch(
-            'sys.argv', ['ubuntu-standalone-builder.py', '1', '2', '3'])
+            'sys.argv', ['ubuntu-standalone-builder.py',
+                         tmpdir.join('1').strpath, '2', '3'])
         with pytest.raises(SystemExit) as excinfo:
             generate_build_config.main()
         assert excinfo.value.code > 0
 
-    def test_main_passes_arguments_to_write_cloud_config(self, mocker):
-        output_filename = 'output.yaml'
+    def test_main_passes_arguments_to_write_cloud_config(self, mocker, tmpdir):
+        output_filename = tmpdir.join('output.yaml').strpath
         binary_customisation_script = 'binary.sh'
         binary_hook_filter = 'binary*hook*'
         customisation_script = 'script.sh'
