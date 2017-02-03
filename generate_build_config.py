@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import argparse
 import base64
+import sys
 
 
 TEMPLATE = """\
@@ -146,7 +147,7 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
     Write an image building cloud-config file to a given location.
 
     :param output_file:
-        The path for the file to write to.
+        An open file object to write the output to.
     :param binary_customisation_script:
         An (optional) path to a binary customisation script; this will be
         included as a binary hook in the build environment before it starts,
@@ -187,13 +188,13 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
         output_string += '\nwrite_files:\n'
         for stanza in write_files_stanzas:
             output_string += stanza
-    with open(output_file, 'w') as f:
-        f.write(output_string)
+    output_file.write(output_string)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('output_filename')
+    parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
+                        default=sys.stdout)
     parser.add_argument('--binary-customisation-script',
                         dest='binary_custom_script',
                         help='A path to a script which will be run outside of'
@@ -212,7 +213,7 @@ def main():
                         'needed for private (https://) PPAs.')
     args = parser.parse_args()
 
-    _write_cloud_config(args.output_filename,
+    _write_cloud_config(args.outfile,
                         customisation_script=args.custom_script,
                         binary_customisation_script=args.binary_custom_script,
                         ppa=args.ppa,
