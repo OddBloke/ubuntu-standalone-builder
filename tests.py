@@ -41,8 +41,9 @@ class TestGetPPASnippet(object):
 def write_cloud_config_to_tmpfile(tmpdir):
     def _write_cloud_config_to_tmpfile(*args, **kwargs):
         output_file = tmpdir.join('output.yaml')
-        generate_build_config._write_cloud_config(
-            output_file.strpath, *args, **kwargs)
+        with open(output_file.strpath, 'w') as output_stream:
+            generate_build_config._write_cloud_config(
+                output_stream, *args, **kwargs)
         return output_file
     return _write_cloud_config_to_tmpfile
 
@@ -159,7 +160,7 @@ class TestWriteCloudConfigWithCustomisationScript(object):
 
     def test_write_files_stanza_count_produced_for_customisation_script(self):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         expected_count = 0
         if 'customisation_script' in self.kwargs:
@@ -170,21 +171,21 @@ class TestWriteCloudConfigWithCustomisationScript(object):
 
     def test_customisation_script_owned_by_root(self):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         for stanza in cloud_config['write_files']:
             assert 'root:root' == stanza['owner']
 
     def test_customisation_script_is_executable_by_root(self):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         for stanza in cloud_config['write_files']:
             assert '7' == stanza['permissions'][1]
 
     def test_customisation_script_placed_in_correct_directory(self):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         for stanza in cloud_config['write_files']:
             path = py.path.local(stanza['path'])
@@ -194,7 +195,7 @@ class TestWriteCloudConfigWithCustomisationScript(object):
 
     def test_customisation_script_is_an_appropriate_hook(self):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         for stanza in cloud_config['write_files']:
             path = py.path.local(stanza['path'])
@@ -207,14 +208,14 @@ class TestWriteCloudConfigWithCustomisationScript(object):
 
     def test_customisation_script_marked_as_base64(self):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         for stanza in cloud_config['write_files']:
             assert 'b64' == stanza['encoding']
 
     def test_customisation_script_is_included_in_template_as_base64(self):
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         for stanza in cloud_config['write_files']:
             if stanza['path'].endswith('9998-local-modifications.chroot'):
@@ -234,7 +235,7 @@ class TestWriteCloudConfigWithCustomisationScript(object):
             test_config['script_file'].remove()
             test_config['script_file'].ensure()
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         assert 'write_files' not in cloud_config
 
@@ -242,7 +243,7 @@ class TestWriteCloudConfigWithCustomisationScript(object):
         if list(self.kwargs.keys()) == ['binary_customisation_script']:
             pytest.skip('Test only applies to chroot hooks.')
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         sequence_numbers = {}
         for stanza in cloud_config['write_files']:
@@ -266,7 +267,7 @@ class TestWriteCloudConfigWithCustomisationScript(object):
             generate_build_config,
             "{}_CONTENT".format(hook.upper()), expected_string)
         generate_build_config._write_cloud_config(
-            self.output_file.strpath, **self.kwargs)
+            open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         contents = [base64.b64decode(stanza['content'])
                     for stanza in cloud_config['write_files']]
@@ -277,12 +278,6 @@ class TestWriteCloudConfigWithCustomisationScript(object):
 
 
 class TestMain(object):
-
-    def test_main_exits_nonzero_with_no_cli_arguments(self, mocker):
-        mocker.patch('sys.argv', ['ubuntu-standalone-builder.py'])
-        with pytest.raises(SystemExit) as excinfo:
-            generate_build_config.main()
-        assert excinfo.value.code > 0
 
     def test_main_exits_nonzero_with_too_many_cli_arguments(self, mocker):
         mocker.patch(
@@ -310,10 +305,12 @@ class TestMain(object):
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
-        assert [mocker.call(
-            output_filename,
-            binary_customisation_script=binary_customisation_script,
-            binary_hook_filter=binary_hook_filter,
-            customisation_script=customisation_script,
-            ppa=ppa,
-            ppa_key=ppa_key)] == write_cloud_config_mock.call_args_list
+        assert len(write_cloud_config_mock.call_args_list) == 1
+        call = write_cloud_config_mock.call_args_list[0]
+        assert ({
+            'binary_customisation_script': binary_customisation_script,
+            'binary_hook_filter': binary_hook_filter,
+            'customisation_script': customisation_script,
+            'ppa': ppa,
+            'ppa_key': ppa_key},) == call[1:]
+        assert output_filename == call[0][0].name
