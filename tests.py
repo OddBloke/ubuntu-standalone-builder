@@ -9,6 +9,11 @@ from six.moves.urllib.parse import urlparse
 import generate_build_config
 
 
+@pytest.fixture(scope='session')
+def build_id():
+    return 'output'
+
+
 class TestGetPPASnippet(object):
 
     def test_unknown_url(self):
@@ -61,8 +66,9 @@ class TestWriteCloudConfig(object):
         assert '#cloud-config' \
             == write_cloud_config_in_memory().splitlines()[0].strip()
 
-    def test_default_build_id_is_output(self, write_cloud_config_in_memory):
-        assert '- export BUILD_ID=output' in \
+    def test_default_build_id_is_output(
+            self, build_id, write_cloud_config_in_memory):
+        assert '- export BUILD_ID={}'.format(build_id) in \
             write_cloud_config_in_memory().splitlines()
 
     def test_write_files_not_included_by_default(
@@ -181,15 +187,17 @@ class TestWriteCloudConfigWithCustomisationScript(object):
         for stanza in cloud_config['write_files']:
             assert '7' == stanza['permissions'][1]
 
-    def test_customisation_script_placed_in_correct_directory(self):
+    def test_customisation_script_placed_in_correct_directory(self, build_id):
         generate_build_config._write_cloud_config(
             open(self.output_file.strpath, 'w'), **self.kwargs)
         cloud_config = yaml.load(self.output_file.open())
         for stanza in cloud_config['write_files']:
             path = py.path.local(stanza['path'])
-            assert ('/home/ubuntu/build-output/chroot-autobuild'
-                    '/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks' ==
-                    path.dirname)
+            expected_dirname = (
+                '/home/ubuntu/build-{}/chroot-autobuild'
+                '/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks'.format(
+                    build_id))
+            assert expected_dirname == path.dirname
 
     def test_customisation_script_is_an_appropriate_hook(self):
         generate_build_config._write_cloud_config(
