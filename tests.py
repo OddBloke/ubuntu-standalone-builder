@@ -93,6 +93,39 @@ class TestWriteCloudConfig(object):
         output_file = write_cloud_config_to_tmpfile(ppa='ppa:foo/bar')
         assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
 
+    def test_binary_hook_filter_included(self, write_cloud_config_to_tmpfile):
+        hook_filter = 'some*glob*'
+        output_file = write_cloud_config_to_tmpfile(
+            binary_hook_filter=hook_filter)
+        cloud_config = yaml.load(output_file.open())
+        for stanza in cloud_config['write_files']:
+            content = base64.b64decode(stanza['content']).decode('utf-8')
+            if '{}|9997*|9998*|9999*'.format(hook_filter) in content:
+                break
+        else:
+            pytest.fail('Binary hook filter not correctly included.')
+
+    def test_binary_hook_sequence_is_lower_than_030(
+            self, write_cloud_config_to_tmpfile, monkeypatch):
+        # That's the lowest sequence of disks and we want to filter before that
+        filter_template = '-- binary hook filter:{} --'
+        hook_filter = 'some*glob'
+        monkeypatch.setattr(
+            generate_build_config,
+            "BINARY_HOOK_FILTER_CONTENT", filter_template)
+        output_file = write_cloud_config_to_tmpfile(
+            binary_hook_filter=hook_filter)
+        cloud_config = yaml.load(output_file.open())
+        expected_content = filter_template.format(hook_filter)
+        for stanza in cloud_config['write_files']:
+            content = base64.b64decode(stanza['content']).decode('utf-8')
+            if content == expected_content:
+                break
+        else:
+            pytest.fail('Binary hook filter not correctly included.')
+        path = stanza['path'].rsplit('/')[-1]
+        assert path < '030-some-file.binary'
+
 
 def customisation_script_combinations():
     customisation_script_content = '#!/bin/sh\n-- chroot --'
@@ -256,6 +289,7 @@ class TestMain(object):
     def test_main_passes_arguments_to_write_cloud_config(self, mocker):
         output_filename = 'output.yaml'
         binary_customisation_script = 'binary.sh'
+        binary_hook_filter = 'binary*hook*'
         customisation_script = 'script.sh'
         ppa = 'ppa:foo/bar'
         ppa_key = 'DEADBEEF'
@@ -263,6 +297,8 @@ class TestMain(object):
                                   output_filename,
                                   '--binary-customisation-script',
                                   binary_customisation_script,
+                                  '--binary-hook-filter',
+                                  binary_hook_filter,
                                   '--customisation-script',
                                   customisation_script, '--ppa', ppa,
                                   '--ppa-key', ppa_key])
@@ -273,6 +309,7 @@ class TestMain(object):
         call = write_cloud_config_mock.call_args_list[0]
         assert ({
             'binary_customisation_script': binary_customisation_script,
+            'binary_hook_filter': binary_hook_filter,
             'customisation_script': customisation_script,
             'ppa': ppa,
             'ppa_key': ppa_key},) == call[1:]
