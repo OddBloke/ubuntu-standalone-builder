@@ -3,6 +3,7 @@ import base64
 import py
 import pytest
 import yaml
+from six import StringIO
 from six.moves.urllib.parse import urlparse
 
 import generate_build_config
@@ -38,66 +39,64 @@ class TestGetPPASnippet(object):
 
 
 @pytest.fixture
-def write_cloud_config_to_tmpfile(tmpdir):
-    def _write_cloud_config_to_tmpfile(*args, **kwargs):
-        output_file = tmpdir.join('output.yaml')
-        with open(output_file.strpath, 'w') as output_stream:
-            generate_build_config._write_cloud_config(
-                output_stream, *args, **kwargs)
-        return output_file
-    return _write_cloud_config_to_tmpfile
+def write_cloud_config_in_memory():
+    def _write_cloud_config_in_memory(*args, **kwargs):
+        output_stream = StringIO()
+        generate_build_config._write_cloud_config(
+            output_stream, *args, **kwargs)
+        return output_stream.getvalue()
+    return _write_cloud_config_in_memory
 
 
 class TestWriteCloudConfig(object):
 
-    def test_writes_to_file(self, write_cloud_config_to_tmpfile):
-        assert write_cloud_config_to_tmpfile().check()
+    def test_writes_to_file(self, write_cloud_config_in_memory):
+        assert len(write_cloud_config_in_memory()) > 0
 
-    def test_written_output_is_yaml(self, write_cloud_config_to_tmpfile):
-        yaml.load(write_cloud_config_to_tmpfile().read())
+    def test_written_output_is_yaml(self, write_cloud_config_in_memory):
+        yaml.load(write_cloud_config_in_memory())
 
     def test_written_output_is_cloud_config(
-            self, write_cloud_config_to_tmpfile):
+            self, write_cloud_config_in_memory):
         assert '#cloud-config' \
-            == write_cloud_config_to_tmpfile().readlines(cr=False)[0].strip()
+            == write_cloud_config_in_memory().splitlines()[0].strip()
 
-    def test_default_build_id_is_output(self, write_cloud_config_to_tmpfile):
-        assert '- export BUILD_ID=output\n' in \
-            write_cloud_config_to_tmpfile().readlines()
+    def test_default_build_id_is_output(self, write_cloud_config_in_memory):
+        assert '- export BUILD_ID=output' in \
+            write_cloud_config_in_memory().splitlines()
 
     def test_write_files_not_included_by_default(
-            self, write_cloud_config_to_tmpfile):
-        cloud_config = yaml.load(write_cloud_config_to_tmpfile().open())
+            self, write_cloud_config_in_memory):
+        cloud_config = yaml.load(write_cloud_config_in_memory())
         assert 'write_files' not in cloud_config
 
-    def test_no_ppa_included_by_default(self, write_cloud_config_to_tmpfile):
-        content = write_cloud_config_to_tmpfile().read()
+    def test_no_ppa_included_by_default(self, write_cloud_config_in_memory):
+        content = write_cloud_config_in_memory()
         assert 'add-apt-repository' not in content
         assert 'apt-transport-https' not in content
 
-    def _get_wget_line(self, output_file):
-        wget_lines = [ln for ln in output_file.readlines() if 'wget' in ln]
+    def _get_wget_line(self, output):
+        wget_lines = [ln for ln in output.splitlines() if 'wget' in ln]
         assert 1 == len(wget_lines)
         return wget_lines[0]
 
-    def test_daily_image_used(self, write_cloud_config_to_tmpfile):
-        wget_line = self._get_wget_line(write_cloud_config_to_tmpfile())
+    def test_daily_image_used(self, write_cloud_config_in_memory):
+        wget_line = self._get_wget_line(write_cloud_config_in_memory())
         assert 'xenial-server-cloudimg-amd64-root.tar.xz ' in wget_line
 
-    def test_latest_daily_image_used(self, write_cloud_config_to_tmpfile):
-        url = self._get_wget_line(write_cloud_config_to_tmpfile()).split()[2]
+    def test_latest_daily_image_used(self, write_cloud_config_in_memory):
+        url = self._get_wget_line(write_cloud_config_in_memory()).split()[2]
         path = urlparse(url).path
         assert 'current' == path.split('/')[2]
 
-    def test_ppa_snippet_included(self, write_cloud_config_to_tmpfile):
-        output_file = write_cloud_config_to_tmpfile(ppa='ppa:foo/bar')
-        assert 'add-apt-repository -y -u ppa:foo/bar' in output_file.read()
+    def test_ppa_snippet_included(self, write_cloud_config_in_memory):
+        output = write_cloud_config_in_memory(ppa='ppa:foo/bar')
+        assert 'add-apt-repository -y -u ppa:foo/bar' in output
 
-    def test_binary_hook_filter_included(self, write_cloud_config_to_tmpfile):
+    def test_binary_hook_filter_included(self, write_cloud_config_in_memory):
         hook_filter = 'some*glob*'
-        output_file = write_cloud_config_to_tmpfile(
-            binary_hook_filter=hook_filter)
-        cloud_config = yaml.load(output_file.open())
+        output = write_cloud_config_in_memory(binary_hook_filter=hook_filter)
+        cloud_config = yaml.load(output)
         for stanza in cloud_config['write_files']:
             content = base64.b64decode(stanza['content']).decode('utf-8')
             if '{}|9997*|9998*|9999*'.format(hook_filter) in content:
@@ -106,16 +105,15 @@ class TestWriteCloudConfig(object):
             pytest.fail('Binary hook filter not correctly included.')
 
     def test_binary_hook_sequence_is_lower_than_030(
-            self, write_cloud_config_to_tmpfile, monkeypatch):
+            self, write_cloud_config_in_memory, monkeypatch):
         # That's the lowest sequence of disks and we want to filter before that
         filter_template = '-- binary hook filter:{} --'
         hook_filter = 'some*glob'
         monkeypatch.setattr(
             generate_build_config,
             "BINARY_HOOK_FILTER_CONTENT", filter_template)
-        output_file = write_cloud_config_to_tmpfile(
-            binary_hook_filter=hook_filter)
-        cloud_config = yaml.load(output_file.open())
+        output = write_cloud_config_in_memory(binary_hook_filter=hook_filter)
+        cloud_config = yaml.load(output)
         expected_content = filter_template.format(hook_filter)
         for stanza in cloud_config['write_files']:
             content = base64.b64decode(stanza['content']).decode('utf-8')
