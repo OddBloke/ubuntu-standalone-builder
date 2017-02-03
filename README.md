@@ -19,10 +19,10 @@ Building images using ubuntu-standalone builder is a three-phase process:
 
 The `generate_build_config.py` tool is used to produce the cloud-config
 that we will pass in to our cloud instance.  In the basic case, it
-takes a single argument that specifies the output location:
+outputs cloud-config that will perform a basic build:
 
 ```
-$ ./generate_build_config.py build-config.yaml
+$ ./generate_build_config.py > build-config.yaml
 ```
 
 The cloud-config it produces will build the artifacts that are found on
@@ -125,8 +125,8 @@ And then, when generating your cloud-config, you simply pass this to
 
 ```
 $ ./generate_build_config.py \
-    build-config.yaml \
-    --customisation-script customisation.sh
+    --customisation-script customisation.sh \
+    > build-config.yaml
 ```
 
 You can then pass `build-config.yaml` in to your instance launch as
