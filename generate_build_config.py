@@ -12,9 +12,9 @@ packages:
 - bzr
 runcmd:
 # Setup environment
-- export HOME=/home/ubuntu
+- export HOME={homedir}
 - export BUILD_ID=output
-- export CHROOT_ROOT=/home/ubuntu/build-$BUILD_ID/chroot-autobuild
+- export CHROOT_ROOT={homedir}/build-$BUILD_ID/chroot-autobuild
 
 # Setup build chroot
 - wget http://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz
@@ -24,23 +24,23 @@ runcmd:
 - rm $CHROOT_ROOT/etc/resolv.conf  # We need to write over this symlink
 
 # Pull in build scripts
-- bzr branch lp:launchpad-buildd /home/ubuntu/launchpad-buildd
+- bzr branch lp:launchpad-buildd {homedir}/launchpad-buildd
 
 # Perform the build
-- /home/ubuntu/launchpad-buildd/mount-chroot $BUILD_ID
-- /home/ubuntu/launchpad-buildd/update-debian-chroot $BUILD_ID
+- {homedir}/launchpad-buildd/mount-chroot $BUILD_ID
+- {homedir}/launchpad-buildd/update-debian-chroot $BUILD_ID
 {ppa_conf}
-- /home/ubuntu/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID
-- /home/ubuntu/launchpad-buildd/umount-chroot $BUILD_ID
-- mkdir /home/ubuntu/images
-- mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* /home/ubuntu/images
+- {homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID
+- {homedir}/launchpad-buildd/umount-chroot $BUILD_ID
+- mkdir {homedir}/images
+- mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* {homedir}/images
 """  # noqa: E501
 
 WRITE_FILES_STANZA_TEMPLATE = """\
 - encoding: b64
   content: {content}
   path:
-    /home/ubuntu/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/{sequence}-local-modifications.{hook_type}
+    {homedir}/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/{sequence}-local-modifications.{hook_type}
   owner: root:root
   permissions: '0755'
 """  # noqa: E501
@@ -152,15 +152,16 @@ def _get_ppa_snippet(ppa, ppa_key=None):
     return conf
 
 
-def _produce_write_files_stanza(content, hook_type, sequence):
+def _produce_write_files_stanza(content, hook_type, sequence, homedir):
     b64_content = base64.b64encode(content.encode('utf-8')).decode('utf-8')
     return WRITE_FILES_STANZA_TEMPLATE.format(
-        content=b64_content, hook_type=hook_type, sequence=sequence)
+        content=b64_content, hook_type=hook_type, sequence=sequence,
+        homedir=homedir)
 
 
 def _write_cloud_config(output_file, binary_customisation_script=None,
                         binary_hook_filter=None, customisation_script=None,
-                        ppa=None, ppa_key=None):
+                        ppa=None, ppa_key=None, homedir=None):
     """
     Write an image building cloud-config file to a given location.
 
@@ -179,6 +180,9 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
         An (optional) path to a customisation script; this will be included as
         a chroot hook in the build environment before it starts, allowing
         modifications to the image contents to be made.
+    :param homedir:
+        An (optional) path to use for the build environment within the cloud
+        instance.
     :param ppa:
         An (optional) URL pointing to either a public (ppa:user/repo) or
         private (https://user:pass@private-ppa.launchpad.net/...) PPA.
@@ -190,7 +194,9 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
     ppa_snippet = ""
     if ppa is not None:
         ppa_snippet = _get_ppa_snippet(ppa, ppa_key)
-    output_string = TEMPLATE.format(ppa_conf=ppa_snippet)
+    if homedir is None:
+        homedir = '/home/ubuntu'
+    output_string = TEMPLATE.format(ppa_conf=ppa_snippet, homedir=homedir)
     write_files_stanzas = []
     for hook_type, script in (('chroot', customisation_script),
                               ('binary', binary_customisation_script)):
@@ -202,16 +208,20 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
             continue
         if hook_type == 'chroot':
             write_files_stanzas.append(_produce_write_files_stanza(
-                content=SETUP_CONTENT, hook_type=hook_type, sequence=9997))
+                content=SETUP_CONTENT, hook_type=hook_type, sequence=9997,
+                homedir=homedir))
             write_files_stanzas.append(_produce_write_files_stanza(
-                content=TEARDOWN_CONTENT, hook_type=hook_type, sequence=9999))
+                content=TEARDOWN_CONTENT, hook_type=hook_type, sequence=9999,
+                homedir=homedir))
         write_files_stanzas.append(_produce_write_files_stanza(
-            content=content, hook_type=hook_type, sequence=9998))
+            content=content, hook_type=hook_type, sequence=9998,
+            homedir=homedir))
     if binary_hook_filter is not None:
         write_files_stanzas.append(_produce_write_files_stanza(
             content=BINARY_HOOK_FILTER_CONTENT.format(binary_hook_filter),
             hook_type='binary',
-            sequence=0))
+            sequence=0,
+            homedir=homedir))
     if write_files_stanzas:
         output_string += '\nwrite_files:\n'
         for stanza in write_files_stanzas:
@@ -237,6 +247,9 @@ def main():
                         help='A path to a script which will be run within'
                         ' the image chroot, to modify the content within the'
                         ' images produced.')
+    parser.add_argument('--homedir', dest='homedir', metavar='PATH',
+                        help='The path within the image where the build should'
+                        ' be done')
     parser.add_argument('--ppa', dest='ppa', help='The URL of a PPA to inject '
                         'in the build chroot. This can be either a '
                         'ppa:<user>/<ppa> short URL or an https:// URL in the '
@@ -247,6 +260,7 @@ def main():
     args = parser.parse_args()
 
     _write_cloud_config(args.outfile,
+                        homedir=args.homedir,
                         customisation_script=args.custom_script,
                         binary_customisation_script=args.binary_custom_script,
                         binary_hook_filter=args.binary_hook_filter,

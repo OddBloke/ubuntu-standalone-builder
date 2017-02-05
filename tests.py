@@ -291,6 +291,7 @@ class TestMain(object):
         binary_customisation_script = 'binary.sh'
         binary_hook_filter = 'binary*hook*'
         customisation_script = 'script.sh'
+        homedir = '/var/tmp'
         ppa = 'ppa:foo/bar'
         ppa_key = 'DEADBEEF'
         mocker.patch('sys.argv', ['ubuntu-standalone-builder.py',
@@ -300,7 +301,8 @@ class TestMain(object):
                                   '--binary-hook-filter',
                                   binary_hook_filter,
                                   '--customisation-script',
-                                  customisation_script, '--ppa', ppa,
+                                  customisation_script,
+                                  '--homedir', homedir, '--ppa', ppa,
                                   '--ppa-key', ppa_key])
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
@@ -311,6 +313,7 @@ class TestMain(object):
             'binary_customisation_script': binary_customisation_script,
             'binary_hook_filter': binary_hook_filter,
             'customisation_script': customisation_script,
+            'homedir': homedir,
             'ppa': ppa,
             'ppa_key': ppa_key},) == call[1:]
         assert output_filename == call[0][0].name
