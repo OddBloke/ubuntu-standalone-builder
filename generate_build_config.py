@@ -30,7 +30,7 @@ runcmd:
 - {homedir}/launchpad-buildd/mount-chroot $BUILD_ID
 {ppa_conf}
 - {homedir}/launchpad-buildd/update-debian-chroot $BUILD_ID
-- {homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID
+- {homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s)
 - {homedir}/launchpad-buildd/umount-chroot $BUILD_ID
 - mkdir {homedir}/images
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* {homedir}/images
