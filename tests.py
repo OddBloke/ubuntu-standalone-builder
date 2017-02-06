@@ -71,6 +71,13 @@ class TestWriteCloudConfig(object):
         assert '- export BUILD_ID={}'.format(build_id) in \
             write_cloud_config_in_memory().splitlines()
 
+    def test_serial_includes_ubuntu_standalone_builder(
+            self, write_cloud_config_in_memory):
+        buildlivefs_line = [
+            line for line in write_cloud_config_in_memory().splitlines()
+            if 'buildlivefs' in line][0]
+        assert '--datestamp ubuntu-standalone-builder' in buildlivefs_line
+
     def test_write_files_not_included_by_default(
             self, write_cloud_config_in_memory):
         cloud_config = yaml.load(write_cloud_config_in_memory())
