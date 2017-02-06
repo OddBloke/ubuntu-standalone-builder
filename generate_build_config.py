@@ -13,7 +13,7 @@ packages:
 runcmd:
 # Setup environment
 - export HOME={homedir}
-- export BUILD_ID=output
+- export BUILD_ID=root
 - export CHROOT_ROOT={homedir}/build-$BUILD_ID/chroot-autobuild
 
 # Setup build chroot
@@ -40,7 +40,7 @@ WRITE_FILES_STANZA_TEMPLATE = """\
 - encoding: b64
   content: {content}
   path:
-    {homedir}/build-output/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/{sequence}-local-modifications.{hook_type}
+    {homedir}/build-root/chroot-autobuild/usr/share/livecd-rootfs/live-build/ubuntu-cpc/hooks/{sequence}-local-modifications.{hook_type}
   owner: root:root
   permissions: '0755'
 """  # noqa: E501
