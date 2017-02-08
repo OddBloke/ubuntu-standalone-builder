@@ -238,6 +238,8 @@ def main():
                         help='A path to a script which will be run outside of'
                         'the image chroot, to modify the way the contents are'
                         ' packed in to image files.')
+    parser.add_argument('--binary-customization-script',
+                        dest='binary_custom_script', help=argparse.SUPPRESS)
     parser.add_argument('--binary-hook-filter',
                         dest='binary_hook_filter',
                         help='A glob which will be used to remove binary'
@@ -247,6 +249,8 @@ def main():
                         help='A path to a script which will be run within'
                         ' the image chroot, to modify the content within the'
                         ' images produced.')
+    parser.add_argument('--customization-script',
+                        dest='custom_script', help=argparse.SUPPRESS)
     parser.add_argument('--homedir', dest='homedir', metavar='PATH',
                         help='The path within the image where the build should'
                         ' be done')
