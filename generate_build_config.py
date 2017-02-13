@@ -17,7 +17,7 @@ runcmd:
 - export CHROOT_ROOT={homedir}/build-$BUILD_ID/chroot-autobuild
 
 # Setup build chroot
-- wget http://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz
+- wget http://cloud-images.ubuntu.com/{suite}/current/{suite}-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz
 - mkdir -p $CHROOT_ROOT
 - tar -C $CHROOT_ROOT -x -f /tmp/root.tar.xz
 - mkdir $CHROOT_ROOT/build
@@ -30,7 +30,7 @@ runcmd:
 - {homedir}/launchpad-buildd/mount-chroot $BUILD_ID
 {ppa_conf}
 - {homedir}/launchpad-buildd/update-debian-chroot $BUILD_ID
-- {homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s)
+- {homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series {suite} --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s)
 - {homedir}/launchpad-buildd/umount-chroot $BUILD_ID
 - mkdir {homedir}/images
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* {homedir}/images
@@ -47,7 +47,7 @@ WRITE_FILES_STANZA_TEMPLATE = """\
 
 PRIVATE_PPA_TEMPLATE = """
 - chroot $CHROOT_ROOT apt-get install -y apt-transport-https
-- "echo 'deb {ppa_url} xenial main' | tee $CHROOT_ROOT/etc/apt/sources.list.d/builder-extra-ppa.list"
+- "echo 'deb {ppa_url} {suite} main' | tee $CHROOT_ROOT/etc/apt/sources.list.d/builder-extra-ppa.list"
 - "chroot $CHROOT_ROOT apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys {key_id}"
 - chroot $CHROOT_ROOT apt-get -y update
 """  # noqa: E501
@@ -119,7 +119,7 @@ mv /usr/sbin/grub-probe.dist /usr/sbin/grub-probe
 """
 
 
-def _get_ppa_snippet(ppa, ppa_key=None):
+def _get_ppa_snippet(suite, ppa, ppa_key=None):
     """
     Depending on what string is passed as PPA, return an appropriate yaml
     snippet, ready to inject in TEMPLATE.
@@ -141,7 +141,8 @@ def _get_ppa_snippet(ppa, ppa_key=None):
         if ppa_key is None:
             raise ValueError("You must provide a --ppa-key parameter if using "
                              "a private PPA URL.")
-        conf = PRIVATE_PPA_TEMPLATE.format(ppa_url=ppa, key_id=ppa_key)
+        conf = PRIVATE_PPA_TEMPLATE.format(
+            ppa_url=ppa, key_id=ppa_key, suite=suite)
     elif ppa.startswith("ppa"):
         # The simple case, we simply need to inject an "add-apt-repository"
         # command.
@@ -161,7 +162,7 @@ def _produce_write_files_stanza(content, hook_type, sequence, homedir):
 
 def _write_cloud_config(output_file, binary_customisation_script=None,
                         binary_hook_filter=None, customisation_script=None,
-                        ppa=None, ppa_key=None, homedir=None):
+                        ppa=None, ppa_key=None, homedir=None, suite='xenial'):
     """
     Write an image building cloud-config file to a given location.
 
@@ -190,13 +191,17 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
         The (optional) hexadecimal key ID used to sign the PPA. This is only
         used if "ppa" points to a private PPA, and is ignored in every other
         case.
+    :param suite:
+        An (optional) string containing the name of the suite (e.g. "xenial")
+        to build images for.  Defaults to "xenial".
     """
     ppa_snippet = ""
     if ppa is not None:
-        ppa_snippet = _get_ppa_snippet(ppa, ppa_key)
+        ppa_snippet = _get_ppa_snippet(suite, ppa, ppa_key)
     if homedir is None:
         homedir = '/home/ubuntu'
-    output_string = TEMPLATE.format(ppa_conf=ppa_snippet, homedir=homedir)
+    output_string = TEMPLATE.format(
+        ppa_conf=ppa_snippet, homedir=homedir, suite=suite)
     write_files_stanzas = []
     for hook_type, script in (('chroot', customisation_script),
                               ('binary', binary_customisation_script)):

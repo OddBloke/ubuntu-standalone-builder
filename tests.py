@@ -18,29 +18,37 @@ class TestGetPPASnippet(object):
 
     def test_unknown_url(self):
         with pytest.raises(ValueError):
-            generate_build_config._get_ppa_snippet('ftp://blah')
+            generate_build_config._get_ppa_snippet('xenial', 'ftp://blah')
 
     def test_public_ppa(self):
-        result = generate_build_config._get_ppa_snippet('ppa:foo/bar')
+        result = generate_build_config._get_ppa_snippet(
+            'xenial', 'ppa:foo/bar')
         expected = '- chroot $CHROOT_ROOT add-apt-repository -y -u ppa:foo/bar'
         assert result == expected
 
     def test_https_not_private_ppa(self):
         with pytest.raises(ValueError):
-            generate_build_config._get_ppa_snippet('https://blah')
+            generate_build_config._get_ppa_snippet('xenial', 'https://blah')
 
     def test_private_ppa_no_key(self):
         with pytest.raises(ValueError):
             generate_build_config._get_ppa_snippet(
-                'https://private-ppa.example.com')
+                'xenial', 'https://private-ppa.example.com')
 
     def test_private_ppa_with_key(self):
         result = generate_build_config._get_ppa_snippet(
-            'https://private-ppa.example.com', 'DEADBEEF')
+            'xenial', 'https://private-ppa.example.com', 'DEADBEEF')
         assert 'apt-get install -y apt-transport-https' in result
         assert 'deb https://private-ppa.example.com xenial main' in result
         assert ('apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 '
                 '--recv-keys DEADBEEF' in result)
+
+    def test_private_ppa_with_suite(self):
+        suite = 'trusty'
+        result = generate_build_config._get_ppa_snippet(
+            suite, 'https://private-ppa.example.com', 'DEADBEEF')
+        assert ('deb https://private-ppa.example.com {} main'.format(suite)
+                in result)
 
 
 @pytest.fixture
@@ -83,6 +91,13 @@ class TestWriteCloudConfig(object):
             write_cloud_config_in_memory())
         assert '--datestamp ubuntu-standalone-builder' in buildlivefs_line
 
+    def test_livefsbuild_called_with_serial(self,
+                                            write_cloud_config_in_memory):
+        suite = 'trusty'
+        buildlivefs_line = self._get_buildlivefs_line(
+            write_cloud_config_in_memory(suite=suite))
+        assert '--series {}'.format(suite) in buildlivefs_line
+
     def test_write_files_not_included_by_default(
             self, write_cloud_config_in_memory):
         cloud_config = yaml.load(write_cloud_config_in_memory())
@@ -107,6 +122,21 @@ class TestWriteCloudConfig(object):
         path = urlparse(url).path
         assert 'current' == path.split('/')[2]
 
+    def test_suite_modifies_filename_used(self, write_cloud_config_in_memory):
+        suite = 'trusty'
+        wget_line = self._get_wget_line(
+            write_cloud_config_in_memory(suite=suite))
+        assert ('{}-server-cloudimg-amd64-root.tar.xz '.format(suite)
+                in wget_line)
+
+    def test_suite_modifies_path_used(self, write_cloud_config_in_memory):
+        suite = 'trusty'
+        wget_line = self._get_wget_line(
+            write_cloud_config_in_memory(suite=suite))
+        url = wget_line.split()[2]
+        path = urlparse(url).path
+        assert suite == path.split('/')[1]
+
     def test_ppa_snippet_included(self, write_cloud_config_in_memory):
         output = write_cloud_config_in_memory(ppa='ppa:foo/bar')
         assert 'add-apt-repository -y -u ppa:foo/bar' in output
@@ -123,6 +153,14 @@ class TestWriteCloudConfig(object):
         output = write_cloud_config_in_memory(
             ppa=private_ppa, ppa_key='DEADBEEF')
         assert 'deb {} xenial main'.format(private_ppa) in output
+
+    def test_suite_used_in_private_ppa_snippet(self,
+                                               write_cloud_config_in_memory):
+        suite = 'trusty'
+        private_ppa = 'https://private-ppa.example.com'
+        output = write_cloud_config_in_memory(
+            ppa=private_ppa, ppa_key='DEADBEEF', suite=suite)
+        assert 'deb {} {} main'.format(private_ppa, suite) in output
 
     def test_binary_hook_filter_included(self, write_cloud_config_in_memory):
         hook_filter = 'some*glob*'
