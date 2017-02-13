@@ -365,16 +365,16 @@ class TestMain(object):
         homedir = '/var/tmp'
         ppa = 'ppa:foo/bar'
         ppa_key = 'DEADBEEF'
-        mocker.patch('sys.argv', ['ubuntu-standalone-builder.py',
-                                  output_filename,
-                                  '--binary-customisation-script',
-                                  binary_customisation_script,
-                                  '--binary-hook-filter',
-                                  binary_hook_filter,
-                                  '--customisation-script',
-                                  customisation_script,
-                                  '--homedir', homedir, '--ppa', ppa,
-                                  '--ppa-key', ppa_key])
+        mocker.patch('sys.argv', [
+            'ubuntu-standalone-builder.py',
+            output_filename,
+            '--binary-customisation-script', binary_customisation_script,
+            '--binary-hook-filter', binary_hook_filter,
+            '--customisation-script', customisation_script,
+            '--homedir', homedir,
+            '--ppa', ppa,
+            '--ppa-key', ppa_key,
+        ])
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
@@ -386,5 +386,6 @@ class TestMain(object):
             'customisation_script': customisation_script,
             'homedir': homedir,
             'ppa': ppa,
-            'ppa_key': ppa_key},) == call[1:]
+            'ppa_key': ppa_key,
+        },) == call[1:]
         assert output_filename == call[0][0].name
