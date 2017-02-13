@@ -365,6 +365,7 @@ class TestMain(object):
         homedir = '/var/tmp'
         ppa = 'ppa:foo/bar'
         ppa_key = 'DEADBEEF'
+        suite = 'trusty'
         mocker.patch('sys.argv', [
             'ubuntu-standalone-builder.py',
             output_filename,
@@ -374,6 +375,7 @@ class TestMain(object):
             '--homedir', homedir,
             '--ppa', ppa,
             '--ppa-key', ppa_key,
+            '--suite', suite,
         ])
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
@@ -387,5 +389,6 @@ class TestMain(object):
             'homedir': homedir,
             'ppa': ppa,
             'ppa_key': ppa_key,
+            'suite': suite,
         },) == call[1:]
         assert output_filename == call[0][0].name

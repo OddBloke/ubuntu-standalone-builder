@@ -266,6 +266,8 @@ def main():
     parser.add_argument('--ppa-key', dest='ppa_key', help='The GPG key ID '
                         'with which the passed PPA was signed. This is only '
                         'needed for private (https://) PPAs.')
+    parser.add_argument('--suite', dest='suite',
+                        help='The Ubuntu suite for which to build the image.')
     args = parser.parse_args()
 
     _write_cloud_config(args.outfile,
@@ -274,7 +276,9 @@ def main():
                         binary_customisation_script=args.binary_custom_script,
                         binary_hook_filter=args.binary_hook_filter,
                         ppa=args.ppa,
-                        ppa_key=args.ppa_key)
+                        ppa_key=args.ppa_key,
+                        suite=args.suite,
+                        )
 
 
 if __name__ == '__main__':
