@@ -30,7 +30,7 @@ runcmd:
 - {homedir}/launchpad-buildd/mount-chroot $BUILD_ID
 {ppa_conf}
 - {homedir}/launchpad-buildd/update-debian-chroot $BUILD_ID
-- {homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s)
+- "{homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s) {image_ppa}"
 - {homedir}/launchpad-buildd/umount-chroot $BUILD_ID
 - mkdir {homedir}/images
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* {homedir}/images
@@ -161,7 +161,8 @@ def _produce_write_files_stanza(content, hook_type, sequence, homedir):
 
 def _write_cloud_config(output_file, binary_customisation_script=None,
                         binary_hook_filter=None, customisation_script=None,
-                        ppa=None, ppa_key=None, homedir=None):
+                        build_ppa=None, build_ppa_key=None, homedir=None,
+                        image_ppa=None):
     """
     Write an image building cloud-config file to a given location.
 
@@ -190,13 +191,20 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
         The (optional) hexadecimal key ID used to sign the PPA. This is only
         used if "ppa" points to a private PPA, and is ignored in every other
         case.
+    :param image_ppa:
+        FIXME
     """
     ppa_snippet = ""
-    if ppa is not None:
-        ppa_snippet = _get_ppa_snippet(ppa, ppa_key)
+    if build_ppa is not None:
+        ppa_snippet = _get_ppa_snippet(build_ppa, build_ppa_key)
     if homedir is None:
         homedir = '/home/ubuntu'
-    output_string = TEMPLATE.format(ppa_conf=ppa_snippet, homedir=homedir)
+    if image_ppa is None:
+        image_ppa_command = ''
+    else:
+        image_ppa_command = '--extra-ppa {}'.format(image_ppa)
+    output_string = TEMPLATE.format(ppa_conf=ppa_snippet, homedir=homedir,
+                                    image_ppa=image_ppa_command)
     write_files_stanzas = []
     for hook_type, script in (('chroot', customisation_script),
                               ('binary', binary_customisation_script)):
@@ -275,8 +283,9 @@ def main():
                         customisation_script=args.custom_script,
                         binary_customisation_script=args.binary_custom_script,
                         binary_hook_filter=args.binary_hook_filter,
-                        ppa=args.build_ppa,
-                        ppa_key=args.build_ppa_key)
+                        build_ppa=args.build_ppa,
+                        build_ppa_key=args.build_ppa_key,
+                        image_ppa=args.image_ppa)
 
 
 if __name__ == '__main__':
