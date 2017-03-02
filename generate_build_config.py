@@ -254,13 +254,20 @@ def main():
     parser.add_argument('--homedir', dest='homedir', metavar='PATH',
                         help='The path within the image where the build should'
                         ' be done')
-    parser.add_argument('--ppa', dest='ppa', help='The URL of a PPA to inject '
-                        'in the build chroot. This can be either a '
-                        'ppa:<user>/<ppa> short URL or an https:// URL in the '
-                        'case of private PPAs.')
-    parser.add_argument('--ppa-key', dest='ppa_key', help='The GPG key ID '
-                        'with which the passed PPA was signed. This is only '
-                        'needed for private (https://) PPAs.')
+    parser.add_argument('--build-ppa', dest='build_ppa', help='The URL of a '
+                        'PPA to inject in the build chroot. This can be '
+                        'either a ppa:<user>/<ppa> short URL or an https:// '
+                        'URL in the case of private PPAs. Example: '
+                        '"ppa:foo/bar" or "https://user:password@host/ubuntu"')
+    parser.add_argument('--build-ppa-key', dest='build_ppa_key', help='The '
+                        'GPG key ID with which the passed build PPA was '
+                        'signed. This is only needed for private (https://) '
+                        'PPAs.')
+    parser.add_argument('--image-ppa', dest='image_ppa', help='The identifier '
+                        'for a public PPA to inject into the built image. '
+                        'Optionally this can specify an apt pin priority for '
+                        'the whole PPA. Example: "foo/bar:1001". Note the '
+                        'absence of "~".')
     args = parser.parse_args()
 
     _write_cloud_config(args.outfile,
@@ -268,8 +275,8 @@ def main():
                         customisation_script=args.custom_script,
                         binary_customisation_script=args.binary_custom_script,
                         binary_hook_filter=args.binary_hook_filter,
-                        ppa=args.ppa,
-                        ppa_key=args.ppa_key)
+                        ppa=args.build_ppa,
+                        ppa_key=args.build_ppa_key)
 
 
 if __name__ == '__main__':

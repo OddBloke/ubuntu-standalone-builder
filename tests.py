@@ -324,8 +324,8 @@ class TestMain(object):
                                   binary_hook_filter,
                                   '--customisation-script',
                                   customisation_script,
-                                  '--homedir', homedir, '--ppa', ppa,
-                                  '--ppa-key', ppa_key])
+                                  '--homedir', homedir, '--build-ppa', ppa,
+                                  '--build-ppa-key', ppa_key])
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
