@@ -184,15 +184,19 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
     :param homedir:
         An (optional) path to use for the build environment within the cloud
         instance.
-    :param ppa:
+    :param build_ppa:
         An (optional) URL pointing to either a public (ppa:user/repo) or
-        private (https://user:pass@private-ppa.launchpad.net/...) PPA.
-    :param ppa_key:
-        The (optional) hexadecimal key ID used to sign the PPA. This is only
-        used if "ppa" points to a private PPA, and is ignored in every other
-        case.
+        private (https://user:pass@private-ppa.launchpad.net/...) PPA. This
+        will be injected in the builder's chroot.
+    :param build_ppa_key:
+        The (optional) hexadecimal key ID used to sign the builder PPA. This
+        is only used if "build_ppa" points to a private PPA, and is ignored in
+        every other case.
     :param image_ppa:
-        FIXME
+        The identifier for a PPA to be injected inside the built image,
+        optionally with a pin-priority. Archives have a priority of 500 by
+        default, anything above this will take pinning precedence. Example:
+        foo/bar:1001
     """
     ppa_snippet = ""
     if build_ppa is not None:
