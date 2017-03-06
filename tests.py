@@ -83,7 +83,7 @@ class TestWriteCloudConfig(object):
         cloud_config = yaml.load(write_cloud_config_in_memory())
         assert 'write_files' not in cloud_config
 
-    def test_no_ppa_included_by_default(self, write_cloud_config_in_memory):
+    def test_no_build_ppa_by_default(self, write_cloud_config_in_memory):
         content = write_cloud_config_in_memory()
         assert 'add-apt-repository' not in content
         assert 'apt-transport-https' not in content
@@ -102,16 +102,25 @@ class TestWriteCloudConfig(object):
         path = urlparse(url).path
         assert 'current' == path.split('/')[2]
 
-    def test_ppa_snippet_included(self, write_cloud_config_in_memory):
-        output = write_cloud_config_in_memory(ppa='ppa:foo/bar')
+    def test_build_ppa_snippet_included(self, write_cloud_config_in_memory):
+        output = write_cloud_config_in_memory(build_ppa='ppa:foo/bar')
         assert 'add-apt-repository -y -u ppa:foo/bar' in output
 
-    def test_ppa_snippet_included_before_update_debian_chroot(
+    def test_build_ppa_snippet_included_before_update_debian_chroot(
             self, write_cloud_config_in_memory):
         ppa_string = 'ppa:foo/bar'
-        output = write_cloud_config_in_memory(ppa=ppa_string)
+        output = write_cloud_config_in_memory(build_ppa=ppa_string)
         assert output.find('add-apt-repository -y -u {}'.format(ppa_string)) \
             < output.find('update-debian-chroot')
+
+    def test_image_ppa_not_by_default(self, write_cloud_config_in_memory):
+        content = write_cloud_config_in_memory()
+        assert '--extra-ppa' not in content
+
+    def test_image_ppa_added(self, write_cloud_config_in_memory):
+        image_ppa = 'foo/bar:1001'
+        content = write_cloud_config_in_memory(image_ppa=image_ppa)
+        assert '--extra-ppa {}'.format(image_ppa) in content
 
     def test_binary_hook_filter_included(self, write_cloud_config_in_memory):
         hook_filter = 'some*glob*'
@@ -314,8 +323,9 @@ class TestMain(object):
         binary_hook_filter = 'binary*hook*'
         customisation_script = 'script.sh'
         homedir = '/var/tmp'
-        ppa = 'ppa:foo/bar'
-        ppa_key = 'DEADBEEF'
+        build_ppa = 'ppa:foo/bar'
+        build_ppa_key = 'DEADBEEF'
+        image_ppa = 'foo/bar:1001'
         mocker.patch('sys.argv', ['ubuntu-standalone-builder.py',
                                   output_filename,
                                   '--binary-customisation-script',
@@ -324,8 +334,10 @@ class TestMain(object):
                                   binary_hook_filter,
                                   '--customisation-script',
                                   customisation_script,
-                                  '--homedir', homedir, '--ppa', ppa,
-                                  '--ppa-key', ppa_key])
+                                  '--homedir', homedir,
+                                  '--build-ppa', build_ppa,
+                                  '--build-ppa-key', build_ppa_key,
+                                  '--image-ppa', image_ppa])
         write_cloud_config_mock = mocker.patch(
             'generate_build_config._write_cloud_config')
         generate_build_config.main()
@@ -336,6 +348,7 @@ class TestMain(object):
             'binary_hook_filter': binary_hook_filter,
             'customisation_script': customisation_script,
             'homedir': homedir,
-            'ppa': ppa,
-            'ppa_key': ppa_key},) == call[1:]
+            'build_ppa': build_ppa,
+            'build_ppa_key': build_ppa_key,
+            'image_ppa': image_ppa},) == call[1:]
         assert output_filename == call[0][0].name

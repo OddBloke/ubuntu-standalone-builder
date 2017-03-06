@@ -30,7 +30,7 @@ runcmd:
 - {homedir}/launchpad-buildd/mount-chroot $BUILD_ID
 {ppa_conf}
 - {homedir}/launchpad-buildd/update-debian-chroot $BUILD_ID
-- {homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s)
+- "{homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s) {image_ppa}"
 - {homedir}/launchpad-buildd/umount-chroot $BUILD_ID
 - mkdir {homedir}/images
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* {homedir}/images
@@ -161,7 +161,8 @@ def _produce_write_files_stanza(content, hook_type, sequence, homedir):
 
 def _write_cloud_config(output_file, binary_customisation_script=None,
                         binary_hook_filter=None, customisation_script=None,
-                        ppa=None, ppa_key=None, homedir=None):
+                        build_ppa=None, build_ppa_key=None, homedir=None,
+                        image_ppa=None):
     """
     Write an image building cloud-config file to a given location.
 
@@ -183,20 +184,31 @@ def _write_cloud_config(output_file, binary_customisation_script=None,
     :param homedir:
         An (optional) path to use for the build environment within the cloud
         instance.
-    :param ppa:
+    :param build_ppa:
         An (optional) URL pointing to either a public (ppa:user/repo) or
-        private (https://user:pass@private-ppa.launchpad.net/...) PPA.
-    :param ppa_key:
-        The (optional) hexadecimal key ID used to sign the PPA. This is only
-        used if "ppa" points to a private PPA, and is ignored in every other
-        case.
+        private (https://user:pass@private-ppa.launchpad.net/...) PPA. This
+        will be injected in the builder's chroot.
+    :param build_ppa_key:
+        The (optional) hexadecimal key ID used to sign the builder PPA. This
+        is only used if "build_ppa" points to a private PPA, and is ignored in
+        every other case.
+    :param image_ppa:
+        The identifier for a PPA to be injected inside the built image,
+        optionally with a pin-priority. Archives have a priority of 500 by
+        default, anything above this will take pinning precedence. Example:
+        foo/bar:1001
     """
     ppa_snippet = ""
-    if ppa is not None:
-        ppa_snippet = _get_ppa_snippet(ppa, ppa_key)
+    if build_ppa is not None:
+        ppa_snippet = _get_ppa_snippet(build_ppa, build_ppa_key)
     if homedir is None:
         homedir = '/home/ubuntu'
-    output_string = TEMPLATE.format(ppa_conf=ppa_snippet, homedir=homedir)
+    if image_ppa is None:
+        image_ppa_command = ''
+    else:
+        image_ppa_command = '--extra-ppa {}'.format(image_ppa)
+    output_string = TEMPLATE.format(ppa_conf=ppa_snippet, homedir=homedir,
+                                    image_ppa=image_ppa_command)
     write_files_stanzas = []
     for hook_type, script in (('chroot', customisation_script),
                               ('binary', binary_customisation_script)):
@@ -254,13 +266,20 @@ def main():
     parser.add_argument('--homedir', dest='homedir', metavar='PATH',
                         help='The path within the image where the build should'
                         ' be done')
-    parser.add_argument('--ppa', dest='ppa', help='The URL of a PPA to inject '
-                        'in the build chroot. This can be either a '
-                        'ppa:<user>/<ppa> short URL or an https:// URL in the '
-                        'case of private PPAs.')
-    parser.add_argument('--ppa-key', dest='ppa_key', help='The GPG key ID '
-                        'with which the passed PPA was signed. This is only '
-                        'needed for private (https://) PPAs.')
+    parser.add_argument('--build-ppa', dest='build_ppa', help='The URL of a '
+                        'PPA to inject in the build chroot. This can be '
+                        'either a ppa:<user>/<ppa> short URL or an https:// '
+                        'URL in the case of private PPAs. Example: '
+                        '"ppa:foo/bar" or "https://user:password@host/ubuntu"')
+    parser.add_argument('--build-ppa-key', dest='build_ppa_key', help='The '
+                        'GPG key ID with which the passed build PPA was '
+                        'signed. This is only needed for private (https://) '
+                        'PPAs.')
+    parser.add_argument('--image-ppa', dest='image_ppa', help='The identifier '
+                        'for a public PPA to inject into the built image. '
+                        'Optionally this can specify an apt pin priority for '
+                        'the whole PPA. Example: "foo/bar:1001". Note the '
+                        'absence of "~".')
     args = parser.parse_args()
 
     _write_cloud_config(args.outfile,
@@ -268,8 +287,9 @@ def main():
                         customisation_script=args.custom_script,
                         binary_customisation_script=args.binary_custom_script,
                         binary_hook_filter=args.binary_hook_filter,
-                        ppa=args.ppa,
-                        ppa_key=args.ppa_key)
+                        build_ppa=args.build_ppa,
+                        build_ppa_key=args.build_ppa_key,
+                        image_ppa=args.image_ppa)
 
 
 if __name__ == '__main__':
