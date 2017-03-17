@@ -20,7 +20,7 @@ runcmd:
 # Setup build chroot
 - wget http://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64.squashfs -O /tmp/root.squashfs
 - mkdir -p $CHROOT_ROOT
-- unsquashfs -d $CHROOT_TAR /tmp/root.squashfs
+- unsquashfs -force -no-progress -dest $CHROOT_ROOT /tmp/root.squashfs
 - mkdir $CHROOT_ROOT/build
 - rm $CHROOT_ROOT/etc/resolv.conf  # We need to write over this symlink
 
