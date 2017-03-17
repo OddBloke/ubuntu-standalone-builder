@@ -95,7 +95,7 @@ class TestWriteCloudConfig(object):
 
     def test_daily_image_used(self, write_cloud_config_in_memory):
         wget_line = self._get_wget_line(write_cloud_config_in_memory())
-        assert 'xenial-server-cloudimg-amd64-root.tar.xz ' in wget_line
+        assert 'xenial-server-cloudimg-amd64.squashfs ' in wget_line
 
     def test_latest_daily_image_used(self, write_cloud_config_in_memory):
         url = self._get_wget_line(write_cloud_config_in_memory()).split()[2]
