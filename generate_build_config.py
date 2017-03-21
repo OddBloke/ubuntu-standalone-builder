@@ -10,6 +10,7 @@ TEMPLATE = """\
 #cloud-config
 packages:
 - bzr
+- squashfs-tools
 runcmd:
 # Setup environment
 - export HOME={homedir}
@@ -17,9 +18,9 @@ runcmd:
 - export CHROOT_ROOT={homedir}/build-$BUILD_ID/chroot-autobuild
 
 # Setup build chroot
-- wget http://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-root.tar.xz -O /tmp/root.tar.xz
+- wget http://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64.squashfs -O /tmp/root.squashfs
 - mkdir -p $CHROOT_ROOT
-- tar -C $CHROOT_ROOT -x -f /tmp/root.tar.xz
+- unsquashfs -force -no-progress -dest $CHROOT_ROOT /tmp/root.squashfs
 - mkdir $CHROOT_ROOT/build
 - rm $CHROOT_ROOT/etc/resolv.conf  # We need to write over this symlink
 
