@@ -11,6 +11,9 @@ TEMPLATE = """\
 packages:
 - bzr
 - squashfs-tools
+- python-setuptools
+- python-twisted
+- dpkg-dev
 runcmd:
 # Setup environment
 - export HOME={homedir}
@@ -24,15 +27,16 @@ runcmd:
 - mkdir $CHROOT_ROOT/build
 - rm $CHROOT_ROOT/etc/resolv.conf  # We need to write over this symlink
 
-# Pull in build scripts
+# Pull in build scripts and install the python parts
 - bzr branch lp:launchpad-buildd {homedir}/launchpad-buildd
+- "pushd .; cd /home/ubuntu/launchpad-buildd; python setup.py install; popd"
 
 # Perform the build
-- {homedir}/launchpad-buildd/mount-chroot $BUILD_ID
+- {homedir}/launchpad-buildd/bin/mount-chroot $BUILD_ID
 {ppa_conf}
-- {homedir}/launchpad-buildd/update-debian-chroot $BUILD_ID
-- "{homedir}/launchpad-buildd/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s) {image_ppa}"
-- {homedir}/launchpad-buildd/umount-chroot $BUILD_ID
+- {homedir}/launchpad-buildd/bin/update-debian-chroot $BUILD_ID
+- "{homedir}/launchpad-buildd/bin/buildlivefs --arch amd64 --project ubuntu-cpc --series xenial --build-id $BUILD_ID --datestamp ubuntu-standalone-builder-$(date +%s) {image_ppa}"
+- {homedir}/launchpad-buildd/bin/umount-chroot $BUILD_ID
 - mkdir {homedir}/images
 - mv $CHROOT_ROOT/build/livecd.ubuntu-cpc.* {homedir}/images
 """  # noqa: E501
