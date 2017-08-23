@@ -26,6 +26,7 @@ runcmd:
 - unsquashfs -force -no-progress -dest $CHROOT_ROOT /tmp/root.squashfs
 - mkdir $CHROOT_ROOT/build
 - rm $CHROOT_ROOT/etc/resolv.conf  # We need to write over this symlink
+- cp /etc/resolv.conf $CHROOT_ROOT/etc/resolv.conf
 
 # Pull in build scripts and install the python parts
 - bzr branch lp:launchpad-buildd {homedir}/launchpad-buildd
