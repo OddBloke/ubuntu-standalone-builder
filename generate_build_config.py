@@ -30,7 +30,7 @@ runcmd:
 
 # Pull in build scripts and install the python parts
 - bzr branch lp:launchpad-buildd {homedir}/launchpad-buildd
-- "pushd .; cd /home/ubuntu/launchpad-buildd; python setup.py install; popd"
+- "cd /home/ubuntu/launchpad-buildd; python setup.py install; cd"
 
 # Perform the build
 - {homedir}/launchpad-buildd/bin/mount-chroot $BUILD_ID
